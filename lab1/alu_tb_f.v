@@ -10,7 +10,7 @@
 
 `define data_width 16
 
-module ALU_tb_f;
+module ALU_tb;
 
 integer f;
 

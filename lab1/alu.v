@@ -56,6 +56,20 @@ nand_nor_module _nand_nor_module(
 	._C(res[4])
 );
 
+xor_or_xnor xor_or_xnor_module(.A(A), .B(B), .is_neg(FuncCode[0]), .result(res[3]), .offlag(ofFlag));
+
+
+
+logical_shift L_shift(.A(A), .is_right(FuncCode[0]), .result(res[2]), .offlag(ofFlag));
+
+
+
+arith_shift A_shift(.A(A), .is_right(FuncCode[0]), .result(res[1]), .offlag(ofFlag));
+
+
+
+complement_or_zero comp_zero(.A(A), .is_zero(FuncCode[0]), .result(res[0]), .offlag(ofFlag));
+
 
 
 
@@ -78,37 +92,71 @@ always @(*) begin
 
 		`FUNC_NOT: begin
 			C <= res[6]; 
-OverflowFlag <= 1'b0;
+			OverflowFlag <= 1'b0;
 		end
 
 		`FUNC_AND: begin
 			C <= res[5]; 
-OverflowFlag <= 1'b0;
+			OverflowFlag <= 1'b0;
 		end
 
 		`FUNC_OR: begin
 			C <= res[5];
-OverflowFlag <= 1'b0;
+			OverflowFlag <= 1'b0;
 		end 
 
 		`FUNC_NAND: begin
 			C <= res[4]; 
-OverflowFlag <= 1'b0;
+			OverflowFlag <= 1'b0;
 		end
 
-		`FUNC_NOR: begin
+		`FUNC_NOR: 
+		begin
 			C <= res[4]; 
-OverflowFlag <= 1'b0;
+			OverflowFlag <= 1'b0;
 		end
 
-		// `FUNC_XOR: 
-		// `FUNC_XNOR:
-		// `FUNC_LLS: 
-		// `FUNC_LRS: 
-		// `FUNC_ALS: 
-		// `FUNC_ARS: 
-		// `FUNC_TCP: 
-		// `FUNC_ZERO: 
+		`FUNC_XOR: 
+				begin
+			C <= res[3]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_XNOR:
+				begin
+			C <= res[3]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_LLS: 
+				begin
+			C <= res[2]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_LRS: 
+				begin
+			C <= res[2]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_ALS: 
+				begin
+			C <= res[1]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_ARS: 
+				begin
+			C <= res[1]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_TCP: 
+				begin
+			C <= res[0]; 
+			OverflowFlag <= 1'b0;
+		end
+		`FUNC_ZERO: 
+				begin
+			C <= res[0]; 
+			OverflowFlag <= 1'b0;
+		end
+
 		default: begin
 			C <= 16'b0;
 			OverflowFlag <= 1'b0;
