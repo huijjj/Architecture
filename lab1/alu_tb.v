@@ -22,7 +22,7 @@ wire [`data_width-1:0] C;
 wire OverflowFlag;
 
 // Unit Under Test Port Mapping
-<module_name> <module parameter initialization> <instance_name>(
+ALU alu2(
 	.A(A),
 	.B(B),	
 	.FuncCode(FuncCode),
