@@ -17,10 +17,7 @@ module add_sub_module #(parameter data_width = 16) (
 			temp = _B;
 
 		_C = _A + temp;
-		if(_A[data_width - 1] & temp[data_width - 1])
-			_O = _A[data_width - 1] ^ _C[data_width - 1];
-		else
-			_O = 1'b0;
+		_O = ~(_A[data_width - 1] ^ temp[data_width - 1]) & (_A[data_width - 1] ^ _C[data_width - 1]);
 	end
 endmodule
 
@@ -57,7 +54,7 @@ module nand_nor_module #(parameter data_width = 16) (
 	input func,
 	output reg [data_width - 1 : 0] _C
 );
-	always @() begin
+	always @(*) begin
 		if(func) // NOR
 			_C <= ~(_A|_B);
 		else // NAND	
