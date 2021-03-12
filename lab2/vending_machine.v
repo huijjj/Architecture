@@ -69,6 +69,7 @@ module vending_machine (
   									.i_select_item(i_select_item),
 									.clk(clk),
 									.reset_n(reset_n),
+									.i_trigger_return(i_trigger_return),
 									.wait_time(wait_time),
 									.o_return_coin(o_return_coin));
 
