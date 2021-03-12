@@ -29,7 +29,8 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 		select_item = 0;
 		available_item = 0;
 		is_dispensed = 0;
-		is_possible;
+		is_possible = 0;
+		input_coin = 0;
 	end
 
 	// Combinational logic for the next states
@@ -44,7 +45,7 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 		end
 		
 		if(current_total == 1 && (i_input_coin[0] || i_input_coin[1] || i_input_coin[2]))begin
-			current_total = 1;
+			current_total_nxt = 1;
 			input_coin = i_input_coin;
 		end
 		else begin
