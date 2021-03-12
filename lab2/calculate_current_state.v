@@ -18,10 +18,19 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 	integer i;	
 
 	reg [`kTotalBits-1:0] current_coin;
-	reg [`kNumItems-1:0] select_item;
+	reg [`kNumCoins-1:0] input_coin;
+ 	reg [`kNumItems-1:0] select_item;
 	reg [`kNumItems-1:0] available_item;
 	reg is_dispensed;
-	wire is_possible;
+	reg is_possible;
+
+	initial begin
+		current_coin = 0;
+		select_item = 0;
+		available_item = 0;
+		is_dispensed = 0;
+		is_possible;
+	end
 
 	// Combinational logic for the next states
 	always @(*) begin
@@ -36,6 +45,7 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 		
 		if(current_total == 1 && (i_input_coin[0] || i_input_coin[1] || i_input_coin[2]))begin
 			current_total = 1;
+			input_coin = i_input_coin;
 		end
 		else begin
 		end
@@ -93,9 +103,9 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 
 		if(current_total == 1) begin
 
-			current_coin = current_coin + i_input_coin[0]*coin_value[0] + i_input_coin[1]*coin_value[1] + i_input_coin[2]*coin_value[2];
+			current_coin = current_coin + input_coin[0]*coin_value[0] + input_coin[1]*coin_value[1] + input_coin[2]*coin_value[2];
 			
-			input_total = input_total+ i_input_coin[0]*coin_value[0] + i_input_coin[1]*coin_value[1] + i_input_coin[2]*coin_value[2];
+			input_total = input_total+ input_coin[0]*coin_value[0] + input_coin[1]*coin_value[1] + input_coin[2]*coin_value[2];
 			return_total = current_coin;
 			
 			if(current_coin >= item_price[0]) begin
@@ -124,6 +134,8 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				o_available_item[2] = 0;
 				available_item[2] = 0;
 			end
+
+			input_coin = 0;
 		end
 
 		if(current_total == 2)begin
