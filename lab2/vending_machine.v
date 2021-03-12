@@ -35,8 +35,6 @@ module vending_machine (
 	output [`kNumItems-1:0] o_available_item;
 	output [`kNumItems-1:0] o_output_item;
 	output [`kNumCoins-1:0] o_return_coin;
-
-
 	
 
 	// Do not modify the values.
@@ -63,7 +61,7 @@ module vending_machine (
 
 	// This module interface, structure, and given a number of modules are not mandatory but recommended.
 	// However, Implementations that use modules are mandatory.
-		
+
   	check_time_and_coin check_time_and_coin_module(.i_input_coin(i_input_coin),
   									.i_select_item(i_select_item),
 									.clk(clk),

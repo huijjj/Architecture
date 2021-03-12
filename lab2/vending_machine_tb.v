@@ -50,6 +50,11 @@ wire [3:0]o_available_item;
 wire [3:0]o_output_item;
 wire [2:0]o_return_coin;
 
+wire [30 : 0]curr_s;
+wire [30 : 0]next_s;
+wire [30 : 0]coin_sum;
+wire [31 : 0]wait_t;
+
 integer Passed;			// # of passes
 integer Failed;			// # of fails
 integer Current;	        // # current_total for "checking returned money"
@@ -64,6 +69,7 @@ integer Current;	        // # current_total for "checking returned money"
 		.o_available_item(o_available_item),
 		.o_output_item(o_output_item),
 		.o_return_coin(o_return_coin));
+		
 
 // clock signal
 initial clk <= 0;
