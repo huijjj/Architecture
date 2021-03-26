@@ -145,12 +145,14 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire reg_dst;
 	
 	reg memory_read;
-
 	assign readM = memory_read;
 	
 	reg addr;
-	
 	assign address = addr;
+
+	initial begin
+		PC = 0;	
+	end
 
 	always @(posedge clk) begin // instruction fetch
 		addr <= PC;
@@ -264,6 +266,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 
 	wire temp;
 	assign memory_read = temp;
+
 	control_unit control(
 		.instr(instruction),
 		.alu_src(alu_src),
