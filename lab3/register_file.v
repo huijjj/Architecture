@@ -13,7 +13,6 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
     reg [15:0] x1;
     reg [15:0] x2;
     reg [15:0] x3;
-    
 
     always @(posedge clk) begin
         if(reg_write) begin
