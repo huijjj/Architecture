@@ -30,28 +30,6 @@ module mux3 (
 	assign out_1 = sel ? data_1 : data_0;
 endmodule
 
-module mux4 (
-	input [15:0] input0,
-	input [15:0] input1,
-	input [15:0] input2,
-	input sel_0,
-	input sel_1,
-	output reg [15:0] out
-);
-	
-	always @(*) begin
-		if(sel_0 == 0 && sel_1 == 0) begin
-			out = input1;
-		end
-		else if(sel_0 == 0 && sel_1 != 0) begin
-			out = input2;
-		end
-		else if(sel_0 != 0 && sel_1 == 0) begin
-			out = input0;
-		end
-	end
-endmodule
-
 module sign_extender(input_imm, output_imm);
 	input [7:0]input_imm;
 	output [`WORD_SIZE-1:0] output_imm;
@@ -77,7 +55,6 @@ module make_address(pc, imm, result);
 	input [`WORD_SIZE-1:0] pc;
 	input [`WORD_SIZE-1:0] imm;
 	output [`WORD_SIZE-1:0] result;
-
 	assign result[15:12] = pc[15:12];
 	assign result[11:0] = imm[11:0];
 endmodule
@@ -90,8 +67,8 @@ module AND(input0, input1, result);
 endmodule
 
 module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
-	output readM;									
-	output writeM;								
+	output reg readM;									
+	output reg writeM;								
 	output [`WORD_SIZE-1:0] address;	
 	inout [`WORD_SIZE-1:0] data;		
 	input ackOutput;								
@@ -99,9 +76,11 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	input reset_n;									
 	input clk;			
 
-	reg [`WORD_SIZE-1:0] PC;
-	reg [`WORD_SIZE-1:0] instruction;
+	reg [`WORD_SIZE-1:0] PC; // program counter
+	reg [`WORD_SIZE-1:0] instruction; // fetched instruction
 
+
+	// control signals
 	wire reg_write;
 	wire alu_src;
 	wire mem_to_reg;
@@ -111,21 +90,24 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire branch;
 	wire reg_dst;
 	
-	reg memory_read;
-	assign readM = memory_read;
-	
-	reg addr;
-	assign address = addr;
-
 	initial begin
 		PC = 0;	
+		instruction = 0;
+	end
+
+	always @(*) begin // reset
+		if(!reset_n) begin
+			PC = 0;
+			instruction = 0;
+		end
 	end
 
 	always @(posedge clk) begin // instruction fetch
 		addr <= PC;
-		memory_read <= 1;
+		readM <= 1;
 		instruction <= data;
 	end
+
 
 	wire [15:0]sign_extend_imm;
 	wire [15:0]alu_output;
@@ -158,73 +140,8 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [15:0] calc_next_pc;
 	wire selector;
 
-	mux2 select_rd_or_rt(
-		.input0(instruction[7:6]), 
-		.input1(instruction[9:8]), 
-		.sel(reg_dst),
-		.out(write_reg_0)
-	);
 
-	mux3 select_wrReg_and_wrData(
-		.input0(write_reg_0),
-		.data_0(write_data), 
-		.data_1(pcPlus4), //PC+4
-		.sel(pc_to_reg),
-		.out_0(final_write_reg),
-		.out_1(final_write_data)
-	);
 
-	mux1 select_alu_input_data2(
-		.input0(reg_read2),
-		.input1(sign_extend_imm),
-		.sel(alu_src),
-		.out(alu_read2)
-	);
-
-	mux1 select_wrReg_data(
-		.input0(data),
-		.input1(alu_output),
-		.sel(memory_read),
-		.out(write_data)
-	);
-
-	assign pcPlus4 = PC + 4;
-
-	make_address combine_PC_and_imm(
-		.pc(PC),
-		.imm(sign_extend_imm),
-		.result(combine_PCimm)
-	);
-
-	ADD pc_plus_imm(
-		.data_0(PC),
-		.data_1(sign_extend_imm),
-		.result(pcPlusimm)
-	);
-
-	AND and_moudule(
-		.input0(branch),
-		.input1(bcond),
-		.result(selector)
-	);
-
-	mux4 calc_next_PCaddress(
-		.input0(combine_PCimm),
-		.input1(pcPlus4),
-		.input2(pcPlusimm),
-		.sel_0(jal),
-		.sel_1(selector),
-		.out(calc_next_pc)
-	);
-
-	wire nxt_pc;
-	assign PC = nxt_pc;
-	mux1 select_next_pc(
-		.input0(calc_next_pc),
-		.input1(alu_output),
-		.sel(jalr),
-		.out(nxt_pc)
-	);
 
 	wire temp;
 	assign memory_read = temp;
@@ -275,10 +192,44 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.output_imm(sign_extend_imm)	
 	);
 
-	always @(*) begin
-		if(!reset_n) begin
-			PC = 0;
-		end
-	end
+
+
+
+
+
+
+
+
+
+	mux2 select_rd_or_rt(
+		.input0(instruction[7:6]), 
+		.input1(instruction[9:8]), 
+		.sel(reg_dst),
+		.out(write_reg_0)
+	);
+
+	mux3 select_wrReg_and_wrData(
+		.input0(write_reg_0),
+		.data_0(write_data), 
+		.data_1(pcPlus4), //PC+4
+		.sel(pc_to_reg),
+		.out_0(final_write_reg),
+		.out_1(final_write_data)
+	);
+
+	mux1 select_alu_input_data2(
+		.input0(reg_read2),
+		.input1(sign_extend_imm),
+		.sel(alu_src),
+		.out(alu_read2)
+	);
+
+	mux1 select_wrReg_data(
+		.input0(data),
+		.input1(alu_output),
+		.sel(memory_read),
+		.out(write_data)
+	);
+
 
 endmodule							  																		  

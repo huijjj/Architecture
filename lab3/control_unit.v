@@ -11,7 +11,7 @@ output reg branch;
 output reg jal;
 output reg jalr;
 output reg pc_to_reg;
-output reg reg_dst; // Rtype 이면 0 아니면 1
+output reg reg_dst;
 
 reg [3:0] opcode;
 reg [5:0] funcode;
