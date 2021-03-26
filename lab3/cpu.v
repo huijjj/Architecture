@@ -4,30 +4,18 @@ module mux1 (
 	input [`WORD_SIZE-1:0] input0,
 	input [`WORD_SIZE-1:0] input1,
 	input sel,
-	output reg [`WORD_SIZE-1:0] out
+	output [`WORD_SIZE-1:0] out
 );
-	always @(*) begin
-		case (sel)
-			0: out = input0;
-			1: out = input1;
-			default: out = 0;
-		endcase
-	end
+	assign out = sel ? input1 : input0;
 endmodule
 
 module mux2 (
 	input [1:0] input0,
 	input [1:0] input1,
 	input sel,
-	output reg [1:0] out
+	output [1:0] out
 );
-	always @(*) begin
-		case (sel)
-			0: out = input0;
-			1: out = input1;
-			default: out = 0;
-		endcase
-	end
+	assign out = sel ? input1 : input0;
 endmodule
 
 module mux3 (
@@ -35,22 +23,11 @@ module mux3 (
 	input [`WORD_SIZE-1:0] data_0,
 	input [`WORD_SIZE-1:0] data_1,
 	input sel,
-	output reg [1:0] out_0,
-	output reg [`WORD_SIZE-1:0] out_1
+	output [1:0] out_0,
+	output [`WORD_SIZE-1:0] out_1
 );
-	always @(*) begin
-		case (sel)
-			0: begin
-				out_0 = input0;
-				out_1 = data_0;
-			end
-			1: begin
-				out_0 = 2;
-				out_1 = data_1;
-			end
-			
-		endcase	
-	end
+	assign out_0 = sel ? 2'b10 : input0;
+	assign out_1 = sel ? data_1 : data_0;
 endmodule
 
 module mux4 (
@@ -61,6 +38,7 @@ module mux4 (
 	input sel_1,
 	output reg [15:0] out
 );
+	
 	always @(*) begin
 		if(sel_0 == 0 && sel_1 == 0) begin
 			out = input1;
@@ -76,50 +54,39 @@ endmodule
 
 module sign_extender(input_imm, output_imm);
 	input [7:0]input_imm;
-	output reg [`WORD_SIZE-1:0] output_imm;
-
-	always @(*) begin
-		output_imm[7:0] = input_imm[7:0];
-		output_imm[8] = input_imm[7];
-		output_imm[9] = input_imm[7];
-		output_imm[10] = input_imm[7];
-		output_imm[11] = input_imm[7];
-		output_imm[12] = input_imm[7];
-		output_imm[13] = input_imm[7];
-		output_imm[14] = input_imm[7];
-		output_imm[15] = input_imm[7];
-	end
+	output [`WORD_SIZE-1:0] output_imm;
+	assign output_imm[7:0] = input_imm[7:0];
+	assign	output_imm[8] = input_imm[7];
+	assign	output_imm[9] = input_imm[7];
+	assign	output_imm[10] = input_imm[7];
+	assign	output_imm[11] = input_imm[7];
+	assign	output_imm[12] = input_imm[7];
+	assign	output_imm[13] = input_imm[7];
+	assign	output_imm[14] = input_imm[7];
+	assign	output_imm[15] = input_imm[7];
 endmodule
 
 module ADD(data_0, data_1, result);
 	input [`WORD_SIZE-1:0] data_0;
 	input [`WORD_SIZE-1:0] data_1;
-	output reg [`WORD_SIZE-1:0] result;
-
-	always @(*) begin
-		result = data_0 + data_1;
-	end
+	output [`WORD_SIZE-1:0] result;
+	assign result = data_0 + data_1;
 endmodule
 
 module make_address(pc, imm, result);
 	input [`WORD_SIZE-1:0] pc;
 	input [`WORD_SIZE-1:0] imm;
-	output reg [`WORD_SIZE-1:0] result;
+	output [`WORD_SIZE-1:0] result;
 
-	always @(*) begin
-		result[15:12] =	pc[15:12];
-		result[11:0] = imm[11:0];
-	end
+	assign result[15:12] = pc[15:12];
+	assign result[11:0] = imm[11:0];
 endmodule
 
 module AND(input0, input1, result);
 	input input0;
 	input input1;
-	output reg result;
-
-	always @(*) begin
-		result = input0 & input1;
-	end
+	output result;
+	assign result = input0 & input1;
 endmodule
 
 module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
@@ -192,15 +159,15 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire selector;
 
 	mux2 select_rd_or_rt(
-		.input0(instruction[7:6]), // 0이면 rd
-		.input1(instruction[9:8]), // 1이면 rt
+		.input0(instruction[7:6]), 
+		.input1(instruction[9:8]), 
 		.sel(reg_dst),
 		.out(write_reg_0)
 	);
 
 	mux3 select_wrReg_and_wrData(
 		.input0(write_reg_0),
-		.data_0(write_data), //
+		.data_0(write_data), 
 		.data_1(pcPlus4), //PC+4
 		.sel(pc_to_reg),
 		.out_0(final_write_reg),
@@ -221,11 +188,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.out(write_data)
 	);
 
-	ADD pc_plus_4(
-		.data_0(PC),
-		.data_1(16'h0004),
-		.result(pcPlus4)
-	);
+	assign pcPlus4 = PC + 4;
 
 	make_address combine_PC_and_imm(
 		.pc(PC),
@@ -254,19 +217,17 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.out(calc_next_pc)
 	);
 
-	wire [15: 0] pc_out;
-	assign PC = pc_out;
-
+	wire nxt_pc;
+	assign PC = nxt_pc;
 	mux1 select_next_pc(
 		.input0(calc_next_pc),
 		.input1(alu_output),
 		.sel(jalr),
-		.out(pc_out)
+		.out(nxt_pc)
 	);
 
 	wire temp;
 	assign memory_read = temp;
-
 	control_unit control(
 		.instr(instruction),
 		.alu_src(alu_src),

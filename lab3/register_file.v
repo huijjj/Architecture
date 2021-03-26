@@ -14,6 +14,13 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
     reg [15:0] x2;
     reg [15:0] x3;
 
+    initial begin
+        x0 = 0;
+        x1 = 0;
+        x2 = 0;
+        x3 = 0;
+    end
+
     always @(posedge clk) begin     
         case(read1)
             2'b11: begin
