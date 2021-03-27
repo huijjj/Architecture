@@ -66,7 +66,7 @@ module AND(input0, input1, result);
 	assign result = input0 & input1;
 endmodule
 
-module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
+module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r0, r1, r2, r3);
 	output readM;									
 	output writeM;								
 	output [`WORD_SIZE-1:0] address;	
@@ -75,6 +75,12 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	input inputReady;								
 	input reset_n;									
 	input clk;		
+
+
+	output [15:0] r0;
+	output [15:0] r1;
+	output [15:0] r2;
+	output [15:0] r3;	
 
 	reg [`WORD_SIZE-1:0] PC; // program counter
 	reg [`WORD_SIZE-1:0] instruction; // fetched instruction

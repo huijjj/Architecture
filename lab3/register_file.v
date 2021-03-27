@@ -1,18 +1,30 @@
-module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk, reset_n); 
-    	output reg [15:0] read_out1;
-    	output reg [15:0] read_out2;
-    	input [1:0] read1;
-    	input [1:0] read2;
-    	input [1:0] write_reg;
-    	input [15:0] write_data;
-    	input reg_write;
-    	input clk;
+module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk, reset_n, r0, r1, r2, r3); 
+    output reg [15:0] read_out1;
+    output reg [15:0] read_out2;
+    input [1:0] read1;
+    input [1:0] read2;
+    input [1:0] write_reg;
+    input [15:0] write_data;
+    input reg_write;
+    input clk;
 	input reset_n;
 
-    	reg [15:0] x0;
-    	reg [15:0] x1;
+
+	output [15:0] r0;
+	output [15:0] r1;
+	output [15:0] r2;
+	output [15:0] r3;	
+
+    reg [15:0] x0;
+    reg [15:0] x1;
    	reg [15:0] x2;
-    	reg [15:0] x3;
+    reg [15:0] x3;
+
+
+	assign r0 = x0;
+	assign r1 = x1;
+	assign r2 = x2;
+	assign r3 = x3;
 
     	initial begin
        		x0 = 0;
