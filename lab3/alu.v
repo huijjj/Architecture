@@ -171,39 +171,48 @@ module alu_control(instrc, o_opcode, o_alu_func_code, o_instrc_func_code);
 			`ADI_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_ADD;
+                o_instrc_func_code = -1;
 			end
 			`ORI_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_ORR;
+                o_instrc_func_code = -1;
 			end
 			`LHI_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_SHL;
+                o_instrc_func_code = -1;
 			end
 			`LWD_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_ADD;
+                o_instrc_func_code = -1;
 			end
 			`SWD_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_ADD;
+                o_instrc_func_code = -1;
 			end
 			`BNE_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_SUB;
+                o_instrc_func_code = -1;
 			end
 			`BEQ_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_SUB;
+                o_instrc_func_code = -1;
 			end
 			`BGZ_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_SUB;
+                o_instrc_func_code = -1;
 			end
 			`BLZ_OP: begin
 				o_opcode = i_opcode;
 				o_alu_func_code = `FUNC_SUB;
+                o_instrc_func_code = -1;
 			end
 		endcase
 	end
-endmodule	 
+endmodule	

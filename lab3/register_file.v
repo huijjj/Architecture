@@ -1,55 +1,64 @@
-module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk); 
-    output reg [15:0] read_out1;
-    output reg [15:0] read_out2;
-    input [1:0] read1;
-    input [1:0] read2;
-    input [1:0] write_reg;
-    input [15:0] write_data;
-    input reg_write;
-    input clk;
+module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk, reset_n); 
+    	output reg [15:0] read_out1;
+    	output reg [15:0] read_out2;
+    	input [1:0] read1;
+    	input [1:0] read2;
+    	input [1:0] write_reg;
+    	input [15:0] write_data;
+    	input reg_write;
+    	input clk;
+	input reset_n;
 
+    	reg [15:0] x0;
+    	reg [15:0] x1;
+   	reg [15:0] x2;
+    	reg [15:0] x3;
 
-    reg [15:0] x0;
-    reg [15:0] x1;
-    reg [15:0] x2;
-    reg [15:0] x3;
+    	initial begin
+       		x0 = 0;
+       	 	x1 = 0;
+        	x2 = 0;
+        	x3 = 0;
+    	end
 
-    initial begin
-        x0 = 0;
-        x1 = 0;
-        x2 = 0;
-        x3 = 0;
-    end
+	always @(*) begin
+		if(!reset_n) begin
+			x0 = 0;
+        		x1 = 0;
+        		x2 = 0;
+        		x3 = 0;
+		end
+	end
 
-    always @(posedge clk) begin     
-        case(read1)
-            2'b11: begin
-                read_out1 <= x3;
-            end
-            2'b10: begin
-                read_out1 <= x2;                   
-            end
-            2'b01: begin
-                read_out1 <= x1;                  
-            end
-            default : begin
-                read_out1 <= x0;                  
-            end
-        endcase
-        case(read2)
-            2'b11: begin
-                read_out2 <= x3;
-            end
-            2'b10: begin
-                read_out2 <= x2;                   
-            end
-            2'b01: begin
-                read_out2 <= x1;                  
-            end
-            default : begin
-                read_out2 <= x0;                  
-            end
-        endcase 
+    	always @(posedge clk) begin     
+        	case(read1)
+            		2'b11: begin
+                		read_out1 <= x3;
+            		end
+            		2'b10: begin
+                		read_out1 <= x2;                   
+            		end
+            		2'b01: begin
+                		read_out1 <= x1;                  
+            		end
+            		default : begin
+                		read_out1 <= x0;                  
+            		end
+        	endcase
+        	case(read2)
+            		2'b11: begin
+                		read_out2 <= x3;
+            		end
+            		2'b10: begin
+               			read_out2 <= x2;                   
+            		end
+            		2'b01: begin
+                		read_out2 <= x1;                  
+            		end
+            		default : begin
+                		read_out2 <= x0;                  
+            		end
+        	endcase 
     end
 
     always @(negedge clk) begin

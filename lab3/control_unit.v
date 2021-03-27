@@ -21,16 +21,44 @@ always @(*) begin
     funcode = instr[5:0];
     case(opcode)
         `ALU_OP: begin
-            alu_src = 0;
-            reg_write = 1;
-            mem_read = 0;
-            mem_to_reg = 0;
-            mem_write = 0;
-            branch = 0;
-            jal = 0;
-            jalr = 0;
-            pc_to_reg = 0;
-            reg_dst = 0;
+            case(funcode)
+                `INST_FUNC_JPR: begin
+                    alu_src = 0;
+                    reg_write = 0;
+                    mem_read = 0;
+                    mem_to_reg = 0;
+                    mem_write = 0;
+                    branch = 0;
+                    jal = 0;
+                    jalr = 1;
+                    pc_to_reg = 0;
+                    reg_dst = 0;
+                end
+                `INST_FUNC_JRL: begin
+                    alu_src = 0;
+                    reg_write = 1;
+                    mem_read = 0;
+                    mem_to_reg = 0;
+                    mem_write = 0;
+                    branch = 0;
+                    jal = 0;
+                    jalr = 1;
+                    pc_to_reg = 1;
+                    reg_dst = 0;
+                end
+                default: begin
+                    alu_src = 0;
+                    reg_write = 1;
+                    mem_read = 0;
+                    mem_to_reg = 0;
+                    mem_write = 0;
+                    branch = 0;
+                    jal = 0;
+                    jalr = 0;
+                    pc_to_reg = 0;
+                    reg_dst = 0;
+                end
+            endcase
         end
         `ADI_OP: begin
             alu_src = 1;
@@ -146,7 +174,7 @@ always @(*) begin
             mem_read = 0;
             mem_to_reg = 0;
             mem_write = 0;
-            branch = 1;
+            branch = 0;
             jal = 1;
             jalr = 0;
             pc_to_reg = 0;
@@ -158,35 +186,14 @@ always @(*) begin
             mem_read = 0;
             mem_to_reg = 0;
             mem_write = 0;
-            branch = 1;
+            branch = 0;
             jal = 1;
             jalr = 0;
             pc_to_reg = 1;
             reg_dst = 1;
         end
         `JRL_OP: begin
-            alu_src = 0;
-            reg_write = 1;
-            mem_read = 0;
-            mem_to_reg = 0;
-            mem_write = 0;
-            branch = 1;
-            jal = 0;
-            jalr = 1;
-            pc_to_reg = 1;
-            reg_dst = 0;
-        end
-        `JPR_OP: begin
-            alu_src = 0;
-            reg_write = 0;
-            mem_read = 0;
-            mem_to_reg = 0;
-            mem_write = 0;
-            branch = 1;
-            jal = 1;
-            jalr = 0;
-            pc_to_reg = 0;
-            reg_dst = 0;
+            
         end
     endcase
 end
