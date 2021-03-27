@@ -1,4 +1,4 @@
-module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk, reset_n, r0, r1, r2, r3); 
+module register_file( read_out1, read_out2, read1, read2, write_reg, write_data, reg_write, clk, reset_n, r0, r1, r2, r3, instruction_fetch); 
     output reg [15:0] read_out1;
     output reg [15:0] read_out2;
     input [1:0] read1;
@@ -8,7 +8,7 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
     input reg_write;
     input clk;
 	input reset_n;
-
+	input instruction_fetch;
 
 	output [15:0] r0;
 	output [15:0] r1;
@@ -26,23 +26,23 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
 	assign r2 = x2;
 	assign r3 = x3;
 
-    	initial begin
-       		x0 = 0;
-       	 	x1 = 0;
-        	x2 = 0;
-        	x3 = 0;
-    	end
+    initial begin
+    	x0 = 0;
+     	x1 = 0;
+    	x2 = 0;
+    	x3 = 0;
+    end
 
 	always @(*) begin
 		if(!reset_n) begin
 			x0 = 0;
-        		x1 = 0;
-        		x2 = 0;
-        		x3 = 0;
+        	x1 = 0;
+        	x2 = 0;
+        	x3 = 0;
 		end
 	end
 
-    	always @(posedge clk) begin     
+    	always @(negedge instruction_fetch) begin     
         	case(read1)
             		2'b11: begin
                 		read_out1 <= x3;
@@ -73,7 +73,7 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
         	endcase 
     end
 
-    always @(negedge clk) begin
+    always @(posedge clk) begin
             if(reg_write) begin
                 case(write_reg)
                     2'b11: begin

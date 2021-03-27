@@ -16,6 +16,21 @@ output reg reg_dst;
 reg [3:0] opcode;
 reg [5:0] funcode;
 
+initial begin
+    alu_src = 0;
+    reg_write = 0;
+    mem_read = 0;
+    mem_to_reg = 0;
+    mem_write = 0;
+    branch = 0;
+    jal = 0;
+    jalr = 0;
+    pc_to_reg = 0;
+    reg_dst = 0;
+    opcode = 0;
+	funcode = 0;
+end
+
 always @(*) begin
     opcode = instr[15:12];
     funcode = instr[5:0];

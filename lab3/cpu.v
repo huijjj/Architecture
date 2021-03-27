@@ -51,23 +51,23 @@ module ADD(data_0, data_1, result);
 	assign result = data_0 + data_1;
 endmodule
 
-module make_address(pc, imm, result);
+module make_address(pc, offset, result);
 	input [`WORD_SIZE-1:0] pc;
-	input [`WORD_SIZE-1:0] imm;
+	input [`WORD_SIZE-1:0] offset;
 	output [`WORD_SIZE-1:0] result;
 	assign result[15:12] = pc[15:12];
-	assign result[11:0] = imm[11:0];
+	assign result[11:0] = offset[11:0];
 endmodule
 
-module AND(input0, input1, result);
-	input input0;
-	input input1;
+module AND(data_0, data_1, result);
+	input data_0;
+	input data_1;
 	output result;
-	assign result = input0 & input1;
+	assign result = data_0 & data_1;
 endmodule
 
-module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r0, r1, r2, r3);
-	output readM;									
+module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, alu_out, r0, r1, r2, r3, o_imm, o_alu_input_1, o_alu_input_2, pc, o_instruction, reg_input_data);
+	output reg readM;									
 	output writeM;								
 	output [`WORD_SIZE-1:0] address;	
 	inout [`WORD_SIZE-1:0] data;		
@@ -75,17 +75,31 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 	input inputReady;								
 	input reset_n;									
 	input clk;		
+	
+	output [15:0] reg_input_data;
+	
+	
 
-
+	output [15:0] alu_out;
+	
 	output [15:0] r0;
 	output [15:0] r1;
 	output [15:0] r2;
-	output [15:0] r3;	
+	output [15:0] r3;
+
+	output [15:0] o_imm;
+	output [15:0] o_alu_input_1;
+	output [15:0] o_alu_input_2;	
+
+	output [15:0] pc;	
+	output [15:0] o_instruction;	
 
 	reg [`WORD_SIZE-1:0] PC; // program counter
 	reg [`WORD_SIZE-1:0] instruction; // fetched instruction
+	reg [`WORD_SIZE-1:0] loaded_data; // loaded data
 	
-	reg instruction_fetch;
+	assign pc = PC;
+	assign o_instruction = instruction;
 
 	// control signals
 	wire alu_src;
@@ -94,31 +108,40 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 	wire jal;
 	wire jalr;
 	wire pc_to_reg;
+	wire mem_write;
+
 	wire branch;
 	wire reg_dst;
 	wire mem_read;
-	reg memory_read;
 
+	
+	reg instruction_fetch;
+
+	reg o_writeM;
+	
 
 	initial begin // initialize
 		PC = 0;	
 		instruction = 0;
-		instruction_fetch = 0;	
+		instruction_fetch = 0;
+		loaded_data = 0;
+		readM = 0;
+		o_writeM = 0;
 	end
 
 	always @(*) begin // reset
 		if(!reset_n) begin
 			PC = 0;
-			instruction = 0;	
+			instruction = 0;
+			instruction_fetch = 0;	
+			loaded_data = 0;
+			readM = 0;
+			o_writeM = 0;
+			
 		end
 	end
-
-	always @(posedge clk) begin // instruction fetch
-		instruction_fetch <= 1;
-		memory_read <= 1;
-		instruction <= data;
-	end
-
+	
+	
 
 	//module instantiation
 	control_unit control(
@@ -127,7 +150,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 		.reg_write(reg_write),
 		.mem_read(mem_read),
 		.mem_to_reg(mem_to_reg),
-		.mem_write(writeM),
+		.mem_write(mem_write),
 		.branch(branch),
 		.jal(jal),
 		.jalr(jalr),
@@ -148,8 +171,15 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 		.write_data(write_data),
 		.reg_write(reg_write),
 		.clk(clk),
-		.reset_n(reset_n)
+		.reset_n(reset_n),
+		.r0(r0),
+		.r1(r1),
+		.r2(r2),
+		.r3(r3),
+		.instruction_fetch(instruction_fetch)
 	);
+
+	assign reg_input_data = write_data;
 
 	wire [3:0] o_opcode;
 	wire [2:0] o_func_code;
@@ -174,7 +204,13 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 		.alu_output(alu_output)
 	);
 
+	//지워야됨
+	assign o_alu_input_1 = regout_1;
+	assign o_alu_input_2 = alu_input_2;
+
 	wire [15:0] imm;
+	assign o_imm = imm;
+
 	sign_extender imm_gen(
 		.input_imm(instruction[7:0]),
 		.output_imm(imm)	
@@ -205,12 +241,12 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 		.sel(alu_src),
 		.out(alu_input_2)
 	);
-
+	
 	wire [15:0] o_data_src_mux;
 	mux1 data_src_mux(
-		.input0(data),
-		.input1(alu_output),
-		.sel(memory_read),
+		.input0(alu_output),
+		.input1(loaded_data),
+		.sel(mem_to_reg),
 		.out(o_data_src_mux)
 	);
 
@@ -222,18 +258,101 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 	);
 
 	// TODO: PC update
+	wire [15:0] pc_plus_one;
+	wire [15:0] pc_plus_imm;
+	wire [15:0] combine_pc_offset;
+	wire is_branch;
+	wire [15:0] o_is_branch_module;
+	wire [15:0] o_is_jal_module;
+	wire [15:0] next_pc;
 
+	ADD pc_plus_one_module(
+		.data_0(PC),
+		.data_1(16'h0001),
+		.result(pc_plus_one)
+	);
 
+	ADD pc_plus_imm_module(
+		.data_0(pc_plus_one),
+		.data_1(imm),
+		.result(pc_plus_imm)
+	);
 
+	make_address combine_pc_and_offset_module(
+		.pc(PC),
+		.offset(instruction),
+		.result(combine_pc_offset)
+	);
 
+	AND bcond_and_branch(
+		.data_0(bcond),
+		.data_1(branch),
+		.result(is_branch)
+	);
 
+	mux1 is_branch_module(
+		.input0(pc_plus_one),
+		.input1(pc_plus_imm),
+		.sel(is_branch),
+		.out(o_is_branch_module)
+	);
 
+	mux1 is_jal_module(
+		.input0(o_is_branch_module),
+		.input1(combine_pc_offset),
+		.sel(jal),
+		.out(o_is_jal_module)
+	);
+
+	mux1 is_jalr_module(
+		.input0(o_is_jal_module),
+		.input1(alu_output),
+		.sel(jalr),
+		.out(next_pc)
+	);
 
 
 	// connectiong outputs
-	assign memory_read = mem_read;
-	assign readM = memory_read;
-	assign data = memory_read ? 16'bz : regout_2; // do i need to change this?
+	
+	assign data = (mem_read | instruction_fetch) ? 16'bz : regout_2; // do i need to change this?
+	assign readM = instruction_fetch | mem_read;
 	assign address = instruction_fetch ? PC : alu_output;
 
+	assign writeM = o_writeM;
+
+	assign alu_out = alu_output;
+
+
+	// clock sync
+	always @(posedge clk) begin
+		instruction_fetch <= 1;
+	end
+
+	always @(negedge clk) begin
+		if(reset_n) begin
+			PC <= next_pc;
+			o_writeM <= mem_write;
+		end
+	end
+
+	always @(posedge inputReady) begin
+		instruction_fetch <= 0;
+		if(instruction_fetch) begin
+			instruction <= data;
+		end
+		else begin
+			loaded_data <= data;
+		end
+	end
+
+	always @(posedge ackOutput) begin
+		o_writeM <= 0;
+	end
+//	always @(negedge inputReady) begin		
+//		o_writeM <= mem_write;		
+	// end
+	
+	//always @(negedge ackOutput) begin
+		
+	//end
 endmodule							  																		  

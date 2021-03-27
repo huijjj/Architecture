@@ -16,13 +16,8 @@ module tb_cpu();
   	reg inputReady; 					// indicates that data is ready from the input port
   	reg reset_n;    									// active-low RESET signal
   	reg clk;        										// clock signal																																  
-  			
-	wire r0;
-	wire r1;
-	wire r2;
-	wire r3;
-									
-  	cpu UUT (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r0, r1, r2, r3);																				   
+  								
+  	cpu UUT (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);																				   
   																  														  										    
   	always #(`PERIOD1/2)clk = ~clk;  			// generates a clock (period = `PERIOD1)
 			  

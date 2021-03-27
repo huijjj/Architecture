@@ -11,6 +11,11 @@ module alu (alu_input_1, alu_input_2, opcode, func_code, instrc_func, bcond, alu
 	output reg bcond;
 	output reg [`NumBits-1:0] alu_output;
 
+	initial begin
+		bcond = 0;
+		alu_output = 0;
+	end
+
 	always @(*) begin
 		case(func_code)
 			`FUNC_ADD: begin
