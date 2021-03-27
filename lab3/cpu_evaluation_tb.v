@@ -22,7 +22,7 @@ module tb_cpu();
   	always #(`PERIOD1/2)clk = ~clk;  			// generates a clock (period = `PERIOD1)
 			  
   	initial begin
-    		clk = 0;
+    	clk = 0;
 		ackOutput = 0;
 		inputReady = 0;								 		
 	
