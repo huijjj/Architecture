@@ -76,7 +76,6 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r
 	input reset_n;									
 	input clk;		
 
-
 	output [15:0] r0;
 	output [15:0] r1;
 	output [15:0] r2;

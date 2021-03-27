@@ -17,17 +17,17 @@ module tb_cpu();
   	reg reset_n;    									// active-low RESET signal
   	reg clk;        										// clock signal																																  
   			
-	wire r0;
-	wire r1;
-	wire r2;
-	wire r3;
+	wire [15:0] r0;
+	wire [15:0] r1;
+	wire [15:0] r2;
+	wire [15:0] r3;
 									
   	cpu UUT (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, r0, r1, r2, r3);																				   
   																  														  										    
   	always #(`PERIOD1/2)clk = ~clk;  			// generates a clock (period = `PERIOD1)
 			  
   	initial begin
-    		clk = 0;
+    	clk = 0;
 		ackOutput = 0;
 		inputReady = 0;								 		
 	
