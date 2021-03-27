@@ -66,7 +66,7 @@ module AND(data_0, data_1, result);
 	assign result = data_0 & data_1;
 endmodule
 
-module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, alu_out, r0, r1, r2, r3, o_imm, o_alu_input_1, o_alu_input_2, pc, o_instruction, reg_input_data);
+module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	output reg readM;									
 	output writeM;								
 	output [`WORD_SIZE-1:0] address;	
@@ -76,30 +76,12 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 	input reset_n;									
 	input clk;		
 	
-	output [15:0] reg_input_data;
-	
-	
 
-	output [15:0] alu_out;
-	
-	output [15:0] r0;
-	output [15:0] r1;
-	output [15:0] r2;
-	output [15:0] r3;
-
-	output [15:0] o_imm;
-	output [15:0] o_alu_input_1;
-	output [15:0] o_alu_input_2;	
-
-	output [15:0] pc;	
-	output [15:0] o_instruction;	
 
 	reg [`WORD_SIZE-1:0] PC; // program counter
 	reg [`WORD_SIZE-1:0] instruction; // fetched instruction
 	reg [`WORD_SIZE-1:0] loaded_data; // loaded data
 	
-	assign pc = PC;
-	assign o_instruction = instruction;
 
 	// control signals
 	wire alu_src;
@@ -116,7 +98,6 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 
 	
 	reg instruction_fetch;
-
 	reg o_writeM;
 	
 
@@ -172,10 +153,6 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 		.reg_write(reg_write),
 		.clk(clk),
 		.reset_n(reset_n),
-		.r0(r0),
-		.r1(r1),
-		.r2(r2),
-		.r3(r3),
 		.instruction_fetch(instruction_fetch)
 	);
 
@@ -204,13 +181,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 		.alu_output(alu_output)
 	);
 
-	//지워야됨
-	assign o_alu_input_1 = regout_1;
-	assign o_alu_input_2 = alu_input_2;
-
 	wire [15:0] imm;
-	assign o_imm = imm;
-
 	sign_extender imm_gen(
 		.input_imm(instruction[7:0]),
 		.output_imm(imm)	
@@ -314,13 +285,10 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 
 	// connectiong outputs
 	
-	assign data = (mem_read | instruction_fetch) ? 16'bz : regout_2; // do i need to change this?
+	assign data = (mem_read | instruction_fetch) ? 16'bz : regout_2;
 	assign readM = instruction_fetch | mem_read;
 	assign address = instruction_fetch ? PC : alu_output;
-
 	assign writeM = o_writeM;
-
-	assign alu_out = alu_output;
 
 
 	// clock sync
@@ -348,11 +316,5 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk, a
 	always @(posedge ackOutput) begin
 		o_writeM <= 0;
 	end
-//	always @(negedge inputReady) begin		
-//		o_writeM <= mem_write;		
-	// end
-	
-	//always @(negedge ackOutput) begin
-		
-	//end
+
 endmodule							  																		  
