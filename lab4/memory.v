@@ -22,7 +22,7 @@ module memory(clk, reset_n, read_m, write_m, address, data);
 	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
 	reg [`WORD_SIZE-1:0] output_data;
 	
-	assign data = read_m?write_m:`WORD_SIZE'bz;
+	assign data = read_m?output_data:`WORD_SIZE'bz;
 	
 	always@(posedge clk)
 		if(!reset_n)
