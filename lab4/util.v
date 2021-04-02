@@ -28,3 +28,26 @@ module mux2_1 (sel, i1, i2, o);
    end
 
 endmodule
+
+module sign_extender(in, out);
+	input [7:0]in;
+	output [15:0] out;
+
+	assign out[7:0] = in[7:0];
+	assign out[8] = in[7];
+	assign out[9] = in[7];
+	assign out[10] = in[7];
+	assign out[11] = in[7];
+	assign out[12] = in[7];
+	assign out[13] = in[7];
+	assign out[14] = in[7];
+	assign out[15] = in[7];
+endmodule
+
+module make_address(pc, offset, addr);
+	input [15:0] pc;
+	input [15:0] offset;
+	output [15:0] addr;
+	assign addr[15:12] = pc[15:12];
+	assign addr[11:0] = offset[11:0];
+endmodule
