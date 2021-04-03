@@ -16,7 +16,7 @@ endmodule
 
 
 module mux2_1 (sel, i1, i2, o);
-   input [1:0] sel;
+   input sel;
    input [15:0] i0, i1;
    output reg [15:0] o;
 
@@ -44,10 +44,10 @@ module sign_extender(in, out);
 	assign out[15] = in[7];
 endmodule
 
-module make_address(pc, offset, addr);
+module make_address(pc, instruction, addr);
 	input [15:0] pc;
-	input [15:0] offset;
+	input [15:0] instruction;
 	output [15:0] addr;
 	assign addr[15:12] = pc[15:12];
-	assign addr[11:0] = offset[11:0];
+	assign addr[11:0] = instruction[11:0];
 endmodule
