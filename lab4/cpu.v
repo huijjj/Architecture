@@ -38,7 +38,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire PVSupdate;
 	wire mem_write;
 	wire mem_to_reg;
-	wire reg_store;
+	wire pc_store;
 	wire branch_dst_store;
 	wire [] alu_op;
 
@@ -92,7 +92,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		.PVSupdate(PVSupdate)
 		.mem_write(mem_write)
 		.mem_to_reg(mem_to_reg)
-		.reg_store(reg_store)
+		.pc_store(pc_store)
 		.branch_dst_store(branch_dst_store)
 	);
 
@@ -177,22 +177,23 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		.o(alu_input_1)
 	);
 
+	wire [`WORD_SIZE-1:0] o_alu_src_B;
 	mux2_1 alu_src_B(
 		.sel(alu_src_B),
 		.i0(reg_out2),
 		.i1(imm),
-		.o(alu_input_2)
+		.o(o_alu_src_B)
 	);
 
 	mux2_1 alu_input_2_mux(
 		.sel(alu_src_A),
 		.i0(16'h0001),
-		.i1(reg_out2),
+		.i1(o_alu_src_B),
 		.o(alu_input_2)
 	);
 
 	// branch and PC logic
-	assign next_pc = reg_store ? alu_output : next_pc;
+	assign next_pc = pc_store ? alu_output : next_pc;
 	assign branch_dst = branch_dst_store ? alu_output : branch_dst;
 
 	wire [`WORD_SIZE-1:0] o_branch_dst_mux;
@@ -221,8 +222,8 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	// assigning CPU outputs
 	assign read_m = (mem_read || instruction_fetch);
-	assign data = (mem_read || CC == 2'b00) ? 16'bz : reg_out2;
-	assign address = (CC == 2'b00) ? PC : alu_out;
+	assign data = (mem_read || instruction_fetch) ? 16'bz : reg_out2;
+	assign address = instruction_fetch ? PC : alu_out;
 	assign num_inst = instruction_count;
 
 endmodule

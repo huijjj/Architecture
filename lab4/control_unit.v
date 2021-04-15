@@ -1,9 +1,9 @@
 `include "opcodes.v"
-`defind IF 3'd0;
-`defind EX_1 3'd1;
-`defind EX_2 3'd2;
-`defind MEM 3'd3;
-`defind WB 3'd4;
+`define IF 3'b000;
+`define EX_1 3'b001;
+`define EX_2 3'b010;
+`define MEM 3'b011;
+`define WB 3'b100;
 
 
 module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_dst, pc_to_reg, mem_to_reg, alu_src_A, alu_src_B, pc_store, branch_dst_store, branch, jal, jalr, PVSupdate ,alu_op, halt, wwd);
@@ -11,7 +11,7 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
   input [5:0] func_code;
   input clk;
 
-  //얘네들은 어떻게 해야할지 좀 더 고민해보기ㅕㅓ
+  //얘네들은 어떻게 해야할지 좀 더 고민해보기
   //output reg alu_op;
   //output reg halt, wwd;
 
@@ -203,7 +203,7 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 branch_dst_store = 0;
                 branch = 0;
                 jal = 0;
-                jalr = 1;
+                jalr = 0;
                 PVSupdate = 0;
                 next_state = 4;
               end
@@ -220,7 +220,7 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 branch_dst_store = 0;
                 branch = 0;
                 jal = 0;
-                jalr = 1;
+                jalr = 0;
                 PVSupdate = 1;
                 next_state = 0;
               end
@@ -636,7 +636,7 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             mem_to_reg = 0;
             alu_src_A = 0;
             alu_src_B = 0;
-            pc_store = 1;
+            pc_store = 0;
             branch_dst_store = 0;
             branch = 0;
             jal = 1;
