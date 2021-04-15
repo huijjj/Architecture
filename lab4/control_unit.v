@@ -7,13 +7,14 @@
 
 
 module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_dst, pc_to_reg, mem_to_reg, alu_src_A, alu_src_B, pc_store, branch_dst_store, branch, jal, jalr, PVSupdate ,alu_op, halt, wwd);
+halt = 0;
+wwd = 0;
   input [3:0] opcode;
   input [5:0] func_code;
   input clk;
 
   //얘네들은 어떻게 해야할지 좀 더 고민해보기
-  //output reg alu_op;
-  //output reg halt, wwd;
+  output reg halt, wwd;
 
   output reg mem_write, mem_read;
   output reg reg_write;
@@ -23,6 +24,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
   output reg branch, jal, jalr; 
   output reg PVSupdate;
   output reg alu_op;
+  halt = 0;
+  wwd = 0;
 
   reg [2:0] cur_state;
   reg [2:0] next_state;
@@ -42,6 +45,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
     jal = 0;
     jalr = 0;
     PVSupdate = 0;
+    halt = 0;
+    wwd = 0;
 
     cur_state = 0;
     next_state = 0;
@@ -81,6 +86,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 1;
                 alu_op = 0; //pc+1 계산
+                halt = 0;
+                wwd = 0;
               end
               `EX_1: begin
                 mem_write = 0;
@@ -99,6 +106,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 4;
                 alu_op = 1; // op 계산
+                halt = 0;
+                wwd = 0;
               end
               `WB: begin
                 mem_write = 0;
@@ -117,8 +126,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 1;
                 next_state = 0;
                 alu_op = 1; // op 계산
+                halt = 0;
+                wwd = 0;
               end
               default: begin
+                halt = 0;
+                wwd = 0;
+                alu_op = 0;
                 mem_write = 0;
                 mem_read = 0;
                 reg_write = 0;
@@ -135,6 +149,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 0;
                 alu_op = 0;
+                halt = 0;
+                wwd = 0;
               end
             endcase
           end
@@ -157,6 +173,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 1;
                 alu_op = 0;
+                halt = 0;
+                wwd = 0;
               end
               `EX_1: begin
                 mem_write = 0;
@@ -175,8 +193,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 1;
                 next_state = 0;
                 alu_op = 0;
+                halt = 0;
+                wwd = 0;
               end
               default: begin
+                halt = 0;
+                wwd = 0;
+                alu_op = 0;
                 mem_write = 0;
                 mem_read = 0;
                 reg_write = 0;
@@ -193,6 +216,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 0;
                 alu_op = 0;
+                halt = 0;
+                wwd = 0;
               end
             endcase
           end
@@ -215,6 +240,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 4;
                 alu_op = 0; // pc+1 계산
+                halt = 0;
+                wwd = 0;
               end
               `WB: begin
                 mem_write = 0;
@@ -233,8 +260,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 1;
                 next_state = 0;
                 alu_op = 0; // pc+1 계산
+                halt = 0;
+                wwd = 0;
               end
               default: begin
+                halt = 0;
+                wwd = 0;
+                alu_op = 0;
                 mem_write = 0;
                 mem_read = 0;
                 reg_write = 0;
@@ -251,10 +283,15 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
                 PVSupdate = 0;
                 next_state = 0;
                 alu_op = 0;
+                halt = 0;
+                wwd = 0;
               end
             endcase
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -271,6 +308,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
         endcase
       end
@@ -295,6 +334,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 1;
             alu_op = 0; // pc+1 계산
+            halt = 0;
+            wwd = 0;
           end
           `EX_1: begin
             mem_write = 0;
@@ -313,6 +354,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 4;
             alu_op = 1; // op 계산
+            halt = 0;
+            wwd = 0;
           end
           `WB: begin
             mem_write = 0;
@@ -331,8 +374,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 1; // op 계산
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -349,6 +397,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
         endcase
       end
@@ -371,6 +421,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 1;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `EX_1: begin
             mem_write = 0;
@@ -389,6 +441,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 3;
             alu_op = 1; // op 계산
+            halt = 0;
+            wwd = 0;
           end
           `MEM: begin
             mem_write = 0;
@@ -407,6 +461,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 4;
             alu_op = 1; // op 계산
+            halt = 0;
+            wwd = 0;
           end
           `WB: begin
             mem_write = 0;
@@ -425,8 +481,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 1; // op 계산
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 1;
@@ -443,6 +504,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
       end
       `SWD_OP: begin
@@ -464,6 +527,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 1;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `EX_1: begin
             mem_write = 0;
@@ -482,6 +547,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 3;
             alu_op = 1;
+            halt = 0;
+            wwd = 0;
           end
           `MEM: begin
             mem_write = 1;
@@ -500,8 +567,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 1;
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             em_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -518,6 +590,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0; 
             alu_op = 1;
+            halt = 0;
+            wwd = 0;
         endcase
       end
       `BNE_OP,
@@ -542,6 +616,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 1;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `EX_1: begin
             mem_write = 0;
@@ -560,6 +636,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 2;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `EX_2: begin
             mem_write = 0;
@@ -578,8 +656,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 1;
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -596,6 +679,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
         endcase
       `JMP_OP: begin
@@ -617,6 +702,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 1;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `EX_1: begin
             mem_write = 0;
@@ -635,8 +722,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 1;
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -653,6 +745,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 0; 
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
         endcase
       end
@@ -675,6 +769,8 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 0;
             next_state = 4;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           `WB: begin
             mem_write = 0;
@@ -693,8 +789,13 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             PVSupdate = 1;
             next_state = 0;
             alu_op = 0;
+            halt = 0;
+            wwd = 0;
           end
           default: begin
+            halt = 0;
+            wwd = 0;
+            alu_op = 0;
             mem_write = 0;
             mem_read = 0;
             reg_write = 0;
@@ -712,6 +813,67 @@ module control_unit(opcode, func_code, clk, mem_wirte, mem_read, reg_write, reg_
             next_state = 0; 
           end
         endcase
+      end
+      `HLT_OP: begin
+        mem_write = 0;
+        mem_read = 0;
+        reg_write = 0;
+        reg_dst = 0;
+        pc_to_reg = 0;
+        mem_to_reg = 0;
+        alu_src_A = 0;
+        alu_src_B = 0;
+        pc_store = 0;
+        branch_dst_store = 0;
+        branch = 0;
+        jal = 0;
+        jalr = 0;
+        PVSupdate = 0;
+        next_state = 0; 
+        halt = 1;
+        wwd = 0;
+        alu_op = 0;
+      end
+      `WWD_OP: begin
+        mem_write = 0;
+        mem_read = 0;
+        reg_write = 0;
+        reg_dst = 0;
+        pc_to_reg = 0;
+        mem_to_reg = 0;
+        alu_src_A = 0;
+        alu_src_B = 0;
+        pc_store = 0;
+        branch_dst_store = 0;
+        branch = 0;
+        jal = 0;
+        jalr = 0;
+        PVSupdate = 0;
+        next_state = 0; 
+        halt = 0;
+        wwd = 1;
+        alu_op = 0;
+      end
+      default: begin
+        halt = 0;
+        wwd = 0;
+        alu_op = 0;
+        mem_write = 0;
+        mem_read = 0;
+        reg_write = 0;
+        reg_dst = 0;
+        pc_to_reg = 0;
+        mem_to_reg = 0;
+        alu_src_A = 0;
+        alu_src_B = 0;
+        pc_store = 0;
+        branch_dst_store = 0;
+        branch = 0;
+        jal = 0;
+        jalr = 0;
+        PVSupdate = 0;
+        next_state = 0; 
+      end
     endcase
   end
 endmodule

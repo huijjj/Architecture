@@ -40,7 +40,8 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire mem_to_reg;
 	wire pc_store;
 	wire branch_dst_store;
-	wire [] alu_op;
+	wire alu_op;
+	wire wwd;
 
 	// init
 	initial begin
@@ -80,20 +81,23 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	// module instanciation
 	control_unit control_unit(
-		.reg_write(reg_write)
-		.reg_dst(reg_dst)
-		.pc_to_reg(pc_to_reg)
-		.mem_read(mem_read)
-		.jal(jal)
-		.jalr(jalr)
-		.branch(branch)
-		.alu_src_A(alu_src_A)
-		.alu_src_B(alu_src_B)
-		.PVSupdate(PVSupdate)
-		.mem_write(mem_write)
-		.mem_to_reg(mem_to_reg)
-		.pc_store(pc_store)
-		.branch_dst_store(branch_dst_store)
+		.reg_write(reg_write),
+		.reg_dst(reg_dst),
+		.pc_to_reg(pc_to_reg),
+		.mem_read(mem_read),
+		.jal(jal),
+		.jalr(jalr),
+		.branch(branch),
+		.alu_src_A(alu_src_A),
+		.alu_src_B(alu_src_B),
+		.PVSupdate(PVSupdate),
+		.mem_write(mem_write),
+		.mem_to_reg(mem_to_reg),
+		.pc_store(pc_store),
+		.branch_dst_store(branch_dst_store),
+		.alu_op(alu_op),
+		.halt(is_halted),
+		.wwd(wwd)
 	);
 
 	wire [`WORD_SIZE-1:0] reg_out1;
@@ -225,5 +229,6 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign data = (mem_read || instruction_fetch) ? 16'bz : reg_out2;
 	assign address = instruction_fetch ? PC : alu_out;
 	assign num_inst = instruction_count;
+	assign output_port = wwd ? reg_out1 : 16'h0000;
 
 endmodule
