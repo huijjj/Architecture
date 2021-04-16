@@ -41,19 +41,19 @@ module alu_control_unit(alu_op, funct, opcode, funcCode, branchType);
                   end
                   `INST_FUNC_NOT: begin
                      funcCode = `FUNC_NOT;
-                     branchType = 2'00;
+                     branchType = 2'b00;
                   end
                   `INST_FUNC_TCP: begin
                      funcCode = `FUNC_TCP;
-                     branchType = 2'00;
+                     branchType = 2'b00;
                   end
                   `INST_FUNC_SHL: begin
                      funcCode = `FUNC_SHL;
-                     branchType = 2'00;
+                     branchType = 2'b00;
                   end
                   `INST_FUNC_SHR: begin
                      funcCode = `FUNC_SHR;
-                     branchType = 2'00;
+                     branchType = 2'b00;
                   end
                   default: begin
                      funcCode = 0;
@@ -102,8 +102,6 @@ module alu_control_unit(alu_op, funct, opcode, funcCode, branchType);
                branchType = 0;
             end
          endcase
-      end
-      default begin
       end
    end
 endmodule

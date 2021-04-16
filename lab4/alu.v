@@ -24,7 +24,7 @@ module alu (A, B, func_code, branch_type, C, overflow_flag, bcond);
             C = A + B;
             case(branch_type)
                 2'b10: begin // bgz
-				   	if(A > 0) begin
+				   	if(A[`NumBits-1] == 0 && A != 0) begin
 				   		bcond = 1;
 				   	end
 				   	else begin
@@ -32,7 +32,7 @@ module alu (A, B, func_code, branch_type, C, overflow_flag, bcond);
 				   	end
 				end
 				2'b11: begin // blz
-				   	if(A < 0) begin
+				   	if(A[`NumBits-1] == 1 && A != 0) begin
 				   		bcond = 1;
 				   	end
 				   	else begin
@@ -104,7 +104,7 @@ module alu (A, B, func_code, branch_type, C, overflow_flag, bcond);
 				C[`NumBits-1] = A[`NumBits-1];
 				bcond = 0;
 			end
-         default:
+         default: begin
          end
       endcase
    end
