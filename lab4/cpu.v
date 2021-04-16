@@ -1,8 +1,7 @@
 `timescale 1ns/1ns
 `define WORD_SIZE 16    // data and address word size
 
-module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, is_halted,
- o_instruction_fetch, o_pvsupdate, o_pc,  o_reg_pc_plus_1, o_cur_state, o_pc_store, o_instruction, o_r0, o_r1, o_r2, o_r3, o_reg_out1, o_reg_out2, o_write_data);
+module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, is_halted);
 	input clk;
 	input reset_n;
 	
@@ -17,59 +16,41 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	output is_halted;
 
 
-	// internal data
-	reg [`WORD_SIZE-1:0] PC;
-	reg [`WORD_SIZE-1:0] loaded_data;
-	reg [`WORD_SIZE-1:0] instruction;
-	reg [`WORD_SIZE-1:0] instruction_count;
-	reg instruction_fetch;
-	reg [`WORD_SIZE-1:0] next_pc;
-	reg [`WORD_SIZE-1:0] branch_dst;
-	reg [`WORD_SIZE-1:0] wwd_output;
-	wire [`WORD_SIZE-1:0] o_jalr_mux;
-
-
-	// test output
-	output o_instruction_fetch;
-	output o_pvsupdate;
-	output [`WORD_SIZE-1:0] o_pc;
-	output [`WORD_SIZE-1:0] o_reg_pc_plus_1;
-	output [2:0] o_cur_state;
-	output o_pc_store;
-	wire [2:0] current_state;
-	output [`WORD_SIZE-1:0]o_instruction;
-	output [15:0] o_r0;
-	output [15:0] o_r1;
-	output [15:0] o_r2;
-	output [15:0] o_r3;
-	wire [15:0] x0;
-	wire [15:0] x1;
-	wire [15:0] x2;
-	wire [15:0] x3;
-	output [15:0] o_reg_out1;
-	output [15:0] o_reg_out2;
-	output [15:0] o_write_data;
-
+	// internal data 
+	reg [`WORD_SIZE-1:0] PC; // program counter
+	reg [`WORD_SIZE-1:0] loaded_data; // loaded data from memory
+	reg [`WORD_SIZE-1:0] instruction; // feteched instruction
+	reg [`WORD_SIZE-1:0] instruction_count; // # of instructions executed
+	reg [`WORD_SIZE-1:0] next_pc; // temporary storage for storing intermediate alu results (pc + 1)
+	reg [`WORD_SIZE-1:0] branch_dst; // temporary storage for storing intermediate alu results (branch target)
+	reg [`WORD_SIZE-1:0] wwd_output; // temporary register holding value of one of the register in register file for wwd output 
+ 
+	reg instruction_fetch; // instruction fetch trigger
+	reg PVSupdate; // pvs updatae trigger
 
 	// control signals
-	wire reg_write;
-	wire reg_dst;
-	wire pc_to_reg;
-	wire mem_read;
-	wire jal;
-	wire jalr;
-	wire branch;
-	wire alu_src_A;
-	wire alu_src_B;
-	reg PVSupdate;
-	wire mem_write;
-	wire mem_to_reg;
-	wire pc_store;
-	wire branch_dst_store;
-	wire alu_op;
-	wire wwd;
-	wire pvs;
+	wire wwd; // identifies wwd instruction
+	wire branch; // idenfifies branch instrution
 
+	wire reg_write; // register write signal
+	wire reg_dst; // write register mux control signal
+	wire pc_to_reg; // write register mux control signal
+	wire mem_to_reg; // write data mux control signal
+
+	wire alu_src_A; // alu source mux control signal
+	wire alu_src_B; // alu source mux control signal
+	wire alu_op; // control signal for alu control unit
+
+	wire mem_read; // memory read signal(load)
+	wire mem_write; // nemory write signal(store)
+
+	wire jal; // pc calc datapath mux control signal
+	wire jalr; // pc calc datapath mux control signal
+	
+	wire pc_store; // value update control signal for alu intermediate storages
+	wire branch_dst_store; // value update control signal for alu intermediate storages
+
+	wire pvs; //pvs update signal, identifies the end of the instruction
 	assign PVSupdate = pvs;
 
 	// init
@@ -99,6 +80,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	end
 
 	// instuction fetch, memory read, PVS update
+	wire [`WORD_SIZE-1:0] o_jalr_mux; // final output from next pc datapath 
 	always @(posedge clk) begin
 		if(instruction_fetch & reset_n) begin
 			instruction <= data;
@@ -138,8 +120,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		.branch_dst_store(branch_dst_store),
 		.alu_op(alu_op),
 		.halt(is_halted),
-		.wwd(wwd),
-		.current_state(current_state)
+		.wwd(wwd)
 	);
 
 	wire [`WORD_SIZE-1:0] reg_out1;
@@ -155,11 +136,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		.clk(clk),
 		.reset_n(reset_n),
 		.read_out1(reg_out1),
-		.read_out2(reg_out2),
-		.o_r0(x0),
-		.o_r1(x1),
-		.o_r2(x2),
-		.o_r3(x3)
+		.read_out2(reg_out2)
 	);
 
 	wire [`WORD_SIZE-1:0] imm;
@@ -206,7 +183,6 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign o_write_reg_mux = reg_dst ? instruction[9:8] : instruction[7:6];
 	assign write_reg = pc_to_reg ? 2'b10 : o_write_reg_mux;
 
-
 	mux2_1 write_data_mux(
 		.sel(mem_to_reg),
 		.i1(alu_out),
@@ -229,8 +205,6 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		.i2(next_pc),
 		.o(alu_input_1)
 	);
-
-
 
 	wire [`WORD_SIZE-1:0] o_alu_src_B;
 	mux2_1 alu_src_B_mux(
@@ -282,20 +256,5 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign output_port = wwd_output;
 	assign wwd_output = wwd ? reg_out1 : wwd_output;
 	assign write_m = mem_write;
-
-	// test output
-	assign o_instruction_fetch = instruction_fetch;
-	assign o_pvsupdate = PVSupdate;
-	assign o_pc = PC;
-	assign o_reg_pc_plus_1 = next_pc;
-	assign o_cur_state = current_state;
-	assign o_pc_store = pc_store;
-	assign o_instruction = instruction;
-	assign o_r0 = x0;
-    assign o_r1 = x1;
-	assign o_r2 = x2;
-	assign o_r3 = x3;
-	assign o_reg_out1 = reg_out1;
-	assign o_reg_out2 = reg_out2;
-	assign o_write_data = write_data;
+	
 endmodule

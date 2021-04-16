@@ -6,7 +6,7 @@
 `define MEM 3'b100
 `define WB 3'b101
 
-module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_write, reg_dst, pc_to_reg, mem_to_reg, alu_src_A, alu_src_B, pc_store, branch_dst_store, branch, jal, jalr, PVSupdate ,alu_op, halt, wwd, current_state);
+module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_write, reg_dst, pc_to_reg, mem_to_reg, alu_src_A, alu_src_B, pc_store, branch_dst_store, branch, jal, jalr, PVSupdate ,alu_op, halt, wwd);
   input reset_n;
   input [3:0] opcode;
   input [5:0] func_code;
@@ -21,9 +21,6 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
   output reg PVSupdate;
   output reg alu_op;
   output reg halt, wwd;
-
-  //for test
-  output [2:0]current_state;
 
   reg [2:0] cur_state;
   reg [2:0] next_state;
@@ -113,7 +110,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 0;
                 PVSupdate = 0;
                 next_state = 2;
-                alu_op = 0; //pc+1 계산
+                alu_op = 0; //pc+1
                 halt = 0;
                 wwd = 0;
               end
@@ -133,7 +130,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 0;
                 PVSupdate = 0;
                 next_state = 5;
-                alu_op = 1; // op 계산
+                alu_op = 1; // op
                 halt = 0;
                 wwd = 0;
               end
@@ -153,7 +150,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 0;
                 PVSupdate = 1;
                 next_state = 0;
-                alu_op = 1; // op 계산
+                alu_op = 1; // op
                 halt = 0;
                 wwd = 0;
               end
@@ -301,7 +298,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 1;
                 PVSupdate = 0;
                 next_state = 5;
-                alu_op = 0; // pc+1 계산
+                alu_op = 0; // pc+1
                 halt = 0;
                 wwd = 0;
               end
@@ -321,7 +318,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 1;
                 PVSupdate = 1;
                 next_state = 0;
-                alu_op = 0; // pc+1 계산
+                alu_op = 0; // pc+1
                 halt = 0;
                 wwd = 0;
               end
@@ -386,7 +383,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
                 jalr = 0;
                 PVSupdate = 0;
                 next_state = 2;
-                alu_op = 0; // pc+1 계산
+                alu_op = 0; // pc+1
                 halt = 0;
                 wwd = 1;
               end
@@ -514,7 +511,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 0;
             next_state = 2;
-            alu_op = 0; // pc+1 계산
+            alu_op = 0; // pc+1
             halt = 0;
             wwd = 0;
           end
@@ -534,7 +531,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 0;
             next_state = 5;
-            alu_op = 1; // op 계산
+            alu_op = 1; // op
             halt = 0;
             wwd = 0;
           end
@@ -554,7 +551,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 1;
             next_state = 0;
-            alu_op = 1; // op 계산
+            alu_op = 1; // op
             halt = 0;
             wwd = 0;
           end
@@ -638,7 +635,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 0;
             next_state = 4;
-            alu_op = 1; // op 계산
+            alu_op = 1; // op
             halt = 0;
             wwd = 0;
           end
@@ -658,7 +655,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 0;
             next_state = 5;
-            alu_op = 1; // op 계산
+            alu_op = 1; // op
             halt = 0;
             wwd = 0;
           end
@@ -678,7 +675,7 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
             jalr = 0;
             PVSupdate = 1;
             next_state = 0;
-            alu_op = 1; // op 계산
+            alu_op = 1; // op
             halt = 0;
             wwd = 0;
           end
@@ -1106,6 +1103,4 @@ module control_unit(reset_n, opcode, func_code, clk, mem_write, mem_read, reg_wr
     endcase
   end
 
-  //for test
-  assign current_state = cur_state;
 endmodule
