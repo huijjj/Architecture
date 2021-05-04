@@ -1,419 +1,522 @@
 `include "opcodes.v" 
 
-module control_unit (opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_or_d, mem_read, mem_to_reg, mem_write, ir_write, pc_to_reg, pc_src, halt, wwd, new_inst, reg_write, alu_src_A, alu_src_B, alu_op);
+module control_unit (opcode, func_code, reset_n, control_signal);
 
 	input [3:0] opcode;
 	input [5:0] func_code;
 
 	input reset_n;
-	
-	output reg halt, reg_dst, pc_to_reg;
-	output reg alu_src, branch, JPR_or_JRL, JMP_or_JAL;
-	output reg mem_write, mem_read;
-	output reg mem_to_reg, wwd;
-	output reg [2:0] alu_op;
-	output reg [1:0] branch_type;
+
+	output reg [17:0]control_signal
 
 	initial begin
-		halt = 0;
-		reg_dst = 0;
-		pc_to_reg = 0;
-		alu_src = 0;
-		branch = 0;
-		JPR_or_JRL  = 0;
-		JMP_or_JAL = 0;
-		mem_write = 0;
-		mem_read = 0;
-		mem_to_reg = 0;
-		wwd = 0;
-		alu_op = 0;
-		branch_type = 0;
+		control_signal[0] = 0; // alu_source
+		control_signal[3:1] = 2'b00; // alu_op
+		control_signal[5:4] = 2'b00; // branch_type
+		control_signal[6] = 0; // JPR_or_JRL
+		control_signal[7] = 0; // JMP_or_JAL
+		control_signal[8] = 0; // branch
+		
+		control_signal[9] = 0; // mem_write
+		control_signal[10] = 0; // mem_read
+
+		control_signal[11] = 0; // mem_to_reg
+		control_signal[12] = 0; // wwd
+		control_signal[13] = 0; // pc_to_reg
+		control_signal[14] = 0; // halt
+		control_signal[15] = 0; // valid_instruction
+		control_signal[16] = 0; // reg_dst
+		control_signal[17] = 0; // reg_write
+
 	end
 
 	always @(*) begin
    		if(!reset_n) begin
-	    	halt = 0;
-			reg_dst = 0;
-			pc_to_reg = 0;
-			alu_src = 0;
-			branch = 0;
-			JPR_or_JRL  = 0;
-			JMP_or_JAL = 0;
-			mem_write = 0;
-			mem_read = 0;
-			mem_to_reg = 0;
-			wwd = 0;
-			alu_op = 0;
-			branch_type = 0;
+	    	control_signal[0] = 0; // alu_source
+			control_signal[3:1] = 2'b00; // alu_op
+			control_signal[5:4] = 2'b00; // branch_type
+			control_signal[6] = 0; // JPR_or_JRL
+			control_signal[7] = 0; // JMP_or_JAL
+			control_signal[8] = 0; // branch
+		
+			control_signal[9] = 0; // mem_write
+			control_signal[10] = 0; // mem_read
+
+			control_signal[11] = 0; // mem_to_reg
+			control_signal[12] = 0; // wwd
+			control_signal[13] = 0; // pc_to_reg
+			control_signal[14] = 0; // halt
+			control_signal[15] = 0; // valid_instruction
+			control_signal[16] = 0; // reg_dst
+			control_signal[17] = 0; // reg_write
     	end
   	end
+
+	always @(*) begin
+		if(opcode == 4'b1011) begin //nop
+			control_signal[15] = 0; // valid_instruction
+		end
+		else begin
+			control_signal[15] = 1; // valid_instruction
+		end
+	end
 
 	always @(*) begin
 		case(opcode)
 			`ALU_OP: begin
 				case(func_code)
 					`INST_FUNC_ADD: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_ADD;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_ADD; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_SUB: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_SUB;
-						branch_type = 2'b11;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_SUB; // alu_op
+						control_signal[5:4] = 2'b11; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_AND: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_AND;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_AND; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_ORR: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_ORR;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_ORR; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_NOT: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_NOT;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_NOT; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_TCP: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_TCP;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_TCP; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
-					`INST_FUNC_SHL: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_SHL;
-						branch_type = 0;
+					`INST_FUNC_SHL: begin	
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `FUNC_SHL; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_SHR: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = `FUNC_SHL;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = `INST_FUNC_SHR; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end 
 					`INST_FUNC_JPR: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 1;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = 0;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 1; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 0; // reg_write
 					end
 					`INST_FUNC_JRL: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 1;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 1;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = 0;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 1; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 1; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 1; // reg_write
 					end
 					`INST_FUNC_WWD: begin
-						halt = 0;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 1;
-						alu_op = 0;
-						branch_type = 0;
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 1; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 0; // reg_write
 					end
 					`INST_FUNC_HLT: begin
-						halt = 1;
-						reg_dst = 0;
-						pc_to_reg = 0;
-						alu_src = 0;
-						branch = 0;
-						JPR_or_JRL  = 0;
-						JMP_or_JAL = 0;
-						mem_write = 0;
-						mem_read = 0;
-						mem_to_reg = 0;
-						wwd = 0;
-						alu_op = 0;
-						branch_type = 0;
-						
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 1; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 0; // reg_write
+					end
+					default: begin
+						control_signal[0] = 0; // alu_source
+						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[5:4] = 2'b00; // branch_type
+						control_signal[6] = 0; // JPR_or_JRL
+						control_signal[7] = 0; // JMP_or_JAL
+						control_signal[8] = 0; // branch
+		
+						control_signal[9] = 0; // mem_write
+						control_signal[10] = 0; // mem_read
+
+						control_signal[11] = 0; // mem_to_reg
+						control_signal[12] = 0; // wwd
+						control_signal[13] = 0; // pc_to_reg
+						control_signal[14] = 0; // halt
+						control_signal[16] = 0; // reg_dst
+						control_signal[17] = 0; // reg_write
 					end
 				endcase
 			end
 			`ADI_OP: begin
-				halt = 0;
-				reg_dst = 1;
-				pc_to_reg = 0;
-				alu_src = 1;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_ADD;
-				branch_type = 0;
+				control_signal[0] = 1; // alu_source
+				control_signal[3:1] = `FUNC_ADD; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 1; // reg_write
 			end
 			`ORI_OP: begin
-				halt = 0;
-				reg_dst = 1;
-				pc_to_reg = 0;
-				alu_src = 1;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_ORR;
-				branch_type = 0;
+				control_signal[0] = 1; // alu_source
+				control_signal[3:1] = `FUNC_ORR; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 1; // reg_write
 			end
 			`LHI_OP: begin
-				halt = 0;
-				reg_dst = 1;
-				pc_to_reg = 0;
-				alu_src = 1;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_SHL;
-				branch_type = 2'b01;
+				control_signal[0] = 1; // alu_source
+				control_signal[3:1] = `FUNC_SHL; // alu_op
+				control_signal[5:4] = 2'b01; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 1; // reg_write
 			end
 			`LWD_OP: begin
-				halt = 0;
-				reg_dst = 1;
-				pc_to_reg = 0;
-				alu_src = 1;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 1;
-				mem_to_reg = 1;
-				wwd = 0;
-				alu_op = `FUNC_ADD;
-				branch_type = 0;
+				control_signal[0] = 1; // alu_source
+				control_signal[3:1] = `FUNC_ADD; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 1; // mem_read
+
+				control_signal[11] = 1; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 1; // reg_write
+
 			end
 			`SWD_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 1;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 1;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_ADD;
-				branch_type = 0;
+				control_signal[0] = 1; // alu_source
+				control_signal[3:1] = `FUNC_ADD; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 1; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 0; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`BNE_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 1;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_SUB;
-				branch_type = 2'b00;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = `FUNC_SUB; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 1; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`BEQ_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 1;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_SUB;
-				branch_type = 2'b01;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = `FUNC_SUB; // alu_op
+				control_signal[5:4] = 2'b01; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 1; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`BGZ_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 1;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_ADD;
-				branch_type = 2'b10;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = `FUNC_ADD; // alu_op
+				control_signal[5:4] = 2'b10; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 1; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`BLZ_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 1;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = `FUNC_ADD;
-				branch_type = 2'b11;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = `FUNC_ADD; // alu_op
+				control_signal[5:4] = 2'b11; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 1; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 1; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`JMP_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 1;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = 0;
-				branch_type = 0;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 1; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 0; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 			`JAL_OP: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 1;
-				alu_src = 0;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 1;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = 0;
-				branch_type = 0;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 1; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 1; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 0; // reg_dst
+				control_signal[17] = 1; // reg_write
 			end
 			default: begin
-				halt = 0;
-				reg_dst = 0;
-				pc_to_reg = 0;
-				alu_src = 0;
-				branch = 0;
-				JPR_or_JRL  = 0;
-				JMP_or_JAL = 0;
-				mem_write = 0;
-				mem_read = 0;
-				mem_to_reg = 0;
-				wwd = 0;
-				alu_op = 0;
-				branch_type = 0;
+				control_signal[0] = 0; // alu_source
+				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[5:4] = 2'b00; // branch_type
+				control_signal[6] = 0; // JPR_or_JRL
+				control_signal[7] = 0; // JMP_or_JAL
+				control_signal[8] = 0; // branch
+		
+				control_signal[9] = 0; // mem_write
+				control_signal[10] = 0; // mem_read
+
+				control_signal[11] = 0; // mem_to_reg
+				control_signal[12] = 0; // wwd
+				control_signal[13] = 0; // pc_to_reg
+				control_signal[14] = 0; // halt
+				control_signal[16] = 0; // reg_dst
+				control_signal[17] = 0; // reg_write
 			end
 		endcase	
 	end

@@ -1,35 +1,19 @@
 `include "opcodes.v" 
 `define BUFFER_SIZE 256 // size of branch target buffer
 
-// module branch_predictor(clk, reset_n, PC, is_flush, is_BJ_type, actual_next_PC, actual_PC, next_PC);
-
-// 	input clk;
-// 	input reset_n;
-// 	input [`WORD_SIZE-1:0] PC;
-// 	input is_flush;
-// 	input is_BJ_type;
-// 	input [`WORD_SIZE-1:0] actual_next_PC; //computed actual next PC from branch resolve stage
-// 	input [`WORD_SIZE-1:0] actual_PC; // PC from branch resolve stage
-
-// 	output [`WORD_SIZE-1:0] next_PC;
-
-
-// 	//TODO: implement branch predictor
-
-// endmodule
-
-module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, prev_state, is_bj, next_PC, taken);
+module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, prev_state, is_bj, next_PC, predictor_state, taken);
 
 	input clk;
 	input reset_n;
 	input [`WORD_SIZE-1:0] PC; // current PC
 	input [`WORD_SIZE-1:0] actual_PC; // calculated target PC from branch resolve stage
 	input [`WORD_SIZE-1:0] branch_PC; // PC of previous branch instruction
-	input actual_taken;
-	input [1:0] prev_state;
+	input actual_taken;;
+	input [1:0] prev_state
 	input is_bj;
 
 	output [`WORD_SIZE-1:0] next_PC; // predicted next PC
+	output [1:0] predictor_state;
 	output taken;
 
 	//TODO: implement branch predictor
