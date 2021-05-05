@@ -562,7 +562,7 @@ module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, pr
 		end
 	end
 
-	// update state & BTB in posedge
+	// update state & BTB in posedge (saturation)
 	always @(posedge clk) begin
 		if(is_bj) begin // update state & BTB if needed
 			case(prev_state)
@@ -613,11 +613,69 @@ module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, pr
 		end
 	end
 
-	// assigning outputs
+	// update state & BTB in posedge (hysteresis)
+	// always @(posedge clk) begin
+	// 	if(is_bj) begin // update state & BTB if needed
+	// 		case(prev_state)
+	// 			2'b00: begin
+	// 				if(actual_taken) begin
+	// 					state <= 2'b01;
+	// 					BTB[branch_index][`WORD_SIZE] <= 1;
+	// 					BTB[branch_index][`WORD_SIZE-1:0] <= actual_PC;
+	// 				end
+	// 				else begin
+	// 					state <= 2'b00;
+	// 				end
+	// 			end
+	// 			2'b01: begin
+	// 				if(actual_taken) begin
+	// 					state <= 2'b11;
+	// 					BTB[branch_index][`WORD_SIZE] <= 1;
+	// 					BTB[branch_index][`WORD_SIZE-1:0] <= actual_PC;
+	// 				end
+	// 				else begin
+	// 					state <= 2'b00;
+	// 				end
+	// 			end
+	// 			2'b10: begin
+	// 				if(actual_taken) begin
+	// 					state <= 2'b11;
+	// 					BTB[branch_index][`WORD_SIZE] <= 1;
+	// 					BTB[branch_index][`WORD_SIZE-1:0] <= actual_PC;
+	// 				end
+	// 				else begin
+	// 					state <= 2'b00;
+	// 				end
+	// 			end
+	// 			default: begin
+	// 				if(actual_taken) begin
+	// 					state <= 2'b11;
+	// 					BTB[branch_index][`WORD_SIZE] <= 1;
+	// 					BTB[branch_index][`WORD_SIZE-1:0] <= actual_PC;
+	// 				end
+	// 				else begin
+	// 					state <= 2'b10;
+	// 				end
+	// 			end
+	// 		endcase
+	// 	end
+	// 	else begin
+	// 		state <= state;
+	// 	end
+	// end
+
+	// // assigning outputs for 2 bit predictors
 	wire temp;
 	assign temp = (state == 2'b11 || state == 2'b10) && valid ? 1 : 0;
 	assign taken = temp;
 	assign next_PC = temp ? BTB[index][`WORD_SIZE-1:0] : PC + 1;
 
+	// // assuming always not taken
+	// assign taken = 0;
+	// assign next_PC = PC + 1;
+
+	// // assuming always taken (we can't assume that given branch is always taken since we may not know the branch target)
+	// assign taken = valid;
+	// assign next_PC = valid ? BTB[index][`WORD_SIZE-1:0] : PC + 1;
 
 endmodule
