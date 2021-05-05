@@ -22,25 +22,10 @@ module cpu_TB();
 	wire [`WORD_SIZE-1:0] output_port;	// this will be used for a "WWD" instruction
 	wire is_halted;				// set if the cpu is halted
 
-	// test outputs
-	wire [`WORD_SIZE-1:0] o_instruction;
-	wire [5:0] o_wb_control_idex;
-	wire [5:0] o_wb_control_exmem;
-	wire [5:0] o_wb_control_memwb;
-	wire [`WORD_SIZE-1:0] o_r0;
-	wire [`WORD_SIZE-1:0] o_r1;
-	wire [`WORD_SIZE-1:0] o_r2;
-	wire [`WORD_SIZE-1:0] o_r3;
-	wire o_actual_taken;
-	wire [`WORD_SIZE-1:0] o_actual_pc;
-	wire [`WORD_SIZE-1:0] o_next_pc;
-	wire o_hazard;
-	wire o_halt_ID;
 
 	
 	// instantiate the unit under test
-	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
-o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, o_r1, o_r2, o_r3, o_actual_taken, o_actual_pc, o_next_pc, o_hazard, o_halt_ID);
+	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 
 	// initialize inputs

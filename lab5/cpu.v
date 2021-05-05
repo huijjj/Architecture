@@ -8,8 +8,7 @@
 `include "utils.v"
 `include "forwarding_unit.v"
 
-module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
-o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, o_r1, o_r2, o_r3, o_actual_taken, o_actual_pc, o_next_pc, o_hazard, o_halt_ID);
+module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 
 	input clk;
 	input reset_n;
@@ -27,22 +26,6 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 	output reg [`WORD_SIZE-1:0] output_port;
 	output is_halted;
 
-
-
-	//test outputs
-	output [`WORD_SIZE-1:0] o_instruction;
-	output [5:0] o_wb_control_idex;
-	output [5:0] o_wb_control_exmem;
-	output [5:0] o_wb_control_memwb;
-	output [`WORD_SIZE-1:0] o_r0;
-	output [`WORD_SIZE-1:0] o_r1;
-	output [`WORD_SIZE-1:0] o_r2;
-	output [`WORD_SIZE-1:0] o_r3;
-	output o_actual_taken;
-	output [`WORD_SIZE-1:0] o_actual_pc;
-	output [`WORD_SIZE-1:0] o_next_pc;
-	output o_hazard;
-	output o_halt_ID;
 
 	//TODO: implement datapath of pipelined CPU
 
@@ -243,11 +226,7 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 		.reg_write(WB_control_MEMWB[5]),
 		.write_data(reg_write_data),
 		.read_out1(o_reg_out1),
-		.read_out2(o_reg_out2),
-		.r0(o_r0),
-		.r1(o_r1),
-		.r2(o_r2),
-		.r3(o_r3)
+		.read_out2(o_reg_out2)
 	);
 
 	hazard_detect hazard_detection_unit(
@@ -426,17 +405,6 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 	end
 
 	assign num_inst = instruction_count;
-
-	// assigning test outputs
-	assign o_instruction = instruction_IFID;
-	assign o_wb_control_idex = WB_control_IDEX;
-	assign o_wb_control_exmem = WB_control_EXMEM;
-	assign o_wb_control_memwb = WB_control_MEMWB;
-	assign o_actual_taken = actual_taken;
-	assign o_actual_pc = actual_PC;
-	assign o_next_pc = o_PC_source_MUX;
-	assign o_hazard = o_hazard_detection_unit;
-	assign o_halt_ID = o_control_unit[14];
 
 endmodule
 
