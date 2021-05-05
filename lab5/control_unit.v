@@ -7,11 +7,11 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 
 	input reset_n;
 
-	output reg [17:0]control_signal
+	output reg [17:0] control_signal;
 
 	initial begin
 		control_signal[0] = 0; // alu_source
-		control_signal[3:1] = 2'b00; // alu_op
+		control_signal[3:1] = 3'b000; // alu_op
 		control_signal[5:4] = 2'b00; // branch_type
 		control_signal[6] = 0; // JPR_or_JRL
 		control_signal[7] = 0; // JMP_or_JAL
@@ -27,13 +27,12 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 		control_signal[15] = 0; // valid_instruction
 		control_signal[16] = 0; // reg_dst
 		control_signal[17] = 0; // reg_write
-
 	end
 
 	always @(*) begin
    		if(!reset_n) begin
 	    	control_signal[0] = 0; // alu_source
-			control_signal[3:1] = 2'b00; // alu_op
+			control_signal[3:1] = 3'b000; // alu_op
 			control_signal[5:4] = 2'b00; // branch_type
 			control_signal[6] = 0; // JPR_or_JRL
 			control_signal[7] = 0; // JMP_or_JAL
@@ -53,8 +52,8 @@ module control_unit (opcode, func_code, reset_n, control_signal);
   	end
 
 	always @(*) begin
-		if(opcode == 4'b1011) begin //nop
-			control_signal[15] = 0; // valid_instruction
+		if((opcode == 4'b1011) | !reset_n) begin //nop
+			control_signal[15] = 0; // valid_instruction (nop)
 		end
 		else begin
 			control_signal[15] = 1; // valid_instruction
@@ -211,7 +210,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 					end 
 					`INST_FUNC_JPR: begin
 						control_signal[0] = 0; // alu_source
-						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[3:1] = 3'b000; // alu_op
 						control_signal[5:4] = 2'b00; // branch_type
 						control_signal[6] = 1; // JPR_or_JRL
 						control_signal[7] = 0; // JMP_or_JAL
@@ -229,7 +228,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 					end
 					`INST_FUNC_JRL: begin
 						control_signal[0] = 0; // alu_source
-						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[3:1] = 3'b000; // alu_op
 						control_signal[5:4] = 2'b00; // branch_type
 						control_signal[6] = 1; // JPR_or_JRL
 						control_signal[7] = 0; // JMP_or_JAL
@@ -247,7 +246,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 					end
 					`INST_FUNC_WWD: begin
 						control_signal[0] = 0; // alu_source
-						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[3:1] = 3'b000; // alu_op
 						control_signal[5:4] = 2'b00; // branch_type
 						control_signal[6] = 0; // JPR_or_JRL
 						control_signal[7] = 0; // JMP_or_JAL
@@ -265,7 +264,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 					end
 					`INST_FUNC_HLT: begin
 						control_signal[0] = 0; // alu_source
-						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[3:1] = 3'b000; // alu_op
 						control_signal[5:4] = 2'b00; // branch_type
 						control_signal[6] = 0; // JPR_or_JRL
 						control_signal[7] = 0; // JMP_or_JAL
@@ -283,7 +282,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 					end
 					default: begin
 						control_signal[0] = 0; // alu_source
-						control_signal[3:1] = 2'b00; // alu_op
+						control_signal[3:1] = 3'b000; // alu_op
 						control_signal[5:4] = 2'b00; // branch_type
 						control_signal[6] = 0; // JPR_or_JRL
 						control_signal[7] = 0; // JMP_or_JAL
@@ -466,7 +465,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 			end
 			`JMP_OP: begin
 				control_signal[0] = 0; // alu_source
-				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[3:1] = 3'b000; // alu_op
 				control_signal[5:4] = 2'b00; // branch_type
 				control_signal[6] = 0; // JPR_or_JRL
 				control_signal[7] = 1; // JMP_or_JAL
@@ -484,7 +483,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 			end
 			`JAL_OP: begin
 				control_signal[0] = 0; // alu_source
-				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[3:1] = 3'b000; // alu_op
 				control_signal[5:4] = 2'b00; // branch_type
 				control_signal[6] = 0; // JPR_or_JRL
 				control_signal[7] = 1; // JMP_or_JAL
@@ -502,7 +501,7 @@ module control_unit (opcode, func_code, reset_n, control_signal);
 			end
 			default: begin
 				control_signal[0] = 0; // alu_source
-				control_signal[3:1] = 2'b00; // alu_op
+				control_signal[3:1] = 3'b000; // alu_op
 				control_signal[5:4] = 2'b00; // branch_type
 				control_signal[6] = 0; // JPR_or_JRL
 				control_signal[7] = 0; // JMP_or_JAL

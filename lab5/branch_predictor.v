@@ -8,8 +8,8 @@ module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, pr
 	input [`WORD_SIZE-1:0] PC; // current PC
 	input [`WORD_SIZE-1:0] actual_PC; // calculated target PC from branch resolve stage
 	input [`WORD_SIZE-1:0] branch_PC; // PC of previous branch instruction
-	input actual_taken;;
-	input [1:0] prev_state
+	input actual_taken;
+	input [1:0] prev_state;
 	input is_bj;
 
 	output [`WORD_SIZE-1:0] next_PC; // predicted next PC
@@ -36,7 +36,6 @@ module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, pr
 	initial begin
 		// initializing predictor state
 		state = 2'b00;
-		next_state = 2'b00;
 
 		// initializing target buffer, setting valid bits to zero(invalid)
 		BTB[16'h00][`WORD_SIZE] = 0;
@@ -302,7 +301,6 @@ module branch_predictor(clk, reset_n, PC, actual_PC, branch_PC, actual_taken, pr
 		if(!reset_n) begin
 			// initializing predictor state
 			state = 2'b00;
-			next_state = 2'b00;
 
 			// initializing target buffer, setting valid bits to zero(invalid)
 			BTB[16'h00][`WORD_SIZE] = 0;

@@ -1,39 +1,39 @@
 `include "opcodes.v"
 
-module use_rs(instruction, use);
-	input [`WORD_SIZE-1:0];
-	output use;
+module use_rs(instruction, use_reg);
+	input [`WORD_SIZE-1:0] instruction;
+	output reg use_reg;
 
 	always @(*) begin
-		if(instruction[15:12] == `JMP_OP || instruction[15:12] = `JAL_OP || (instruction[15:12] == `HLT_OP && instruction[5:0] == `INST_FUNC_HLT)) begin
+		if(instruction[15:12] == `JMP_OP || instruction[15:12] == `JAL_OP || (instruction[15:12] == `HLT_OP && instruction[5:0] == `INST_FUNC_HLT)) begin
 			// JMP or JAL or HLT
-			use = 0;
+			use_reg = 0;
 		end
 		else begin
-			use = 1;
+			use_reg = 1;
 		end	
 	end
 endmodule
 
-module use_rt(instruction, use);
-	input [`WORD_SIZE-1:0];
-	output use;
+module use_rt(instruction, use_reg);
+	input [`WORD_SIZE-1:0] instruction;
+	output reg use_reg;
 	
 	// ADD, SUB, AND, ORR, SWD, BXX -> use = 1;
 
 
 	always @(*) begin
-		case(instrcution[15:12])
+		case(instruction[15:12])
 			`ALU_OP: begin
 				case(instruction[5:0])
 					`INST_FUNC_ADD,
 					`INST_FUNC_SUB,
 					`INST_FUNC_AND,
 					`INST_FUNC_ORR: begin
-						use = 1;
+						use_reg = 1;
 					end
 					default: begin
-						use = 0;
+						use_reg = 0;
 					end
 				endcase
 			end
@@ -42,10 +42,10 @@ module use_rt(instruction, use);
 			`BEQ_OP,
 			`BGZ_OP,
 			`BLZ_OP: begin
-				use = 1;
+				use_reg = 1;
 			end
 			default: begin
-				use = 0;
+				use_reg = 0;
 			end
 		endcase
 	end
@@ -88,9 +88,7 @@ module adder (input_1, input_2, result);
 
     output [15:0] result;
     
-    always @(*) begin
-        result = input_1 + input_2;
-    end
+    assign result = input_1 + input_2;
 
 endmodule
 
