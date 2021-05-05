@@ -176,7 +176,7 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 	wire [`WORD_SIZE-1:0] o_branch_predictor_next_PC;
 	wire [`WORD_SIZE-1:0] actual_PC;
 	wire actual_taken;
-	wire is_bj;
+	wire predict;
 	branch_predictor branch_predictor(
 		.clk(clk),
 		.reset_n(reset_n),
@@ -185,7 +185,7 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 		.branch_PC(PC_IDEX),
 		.actual_taken(actual_taken),
 		.prev_state(predictor_state_IDEX),
-		.is_bj(is_bj),
+		.is_bj(predict),
 		.next_PC(o_branch_predictor_next_PC),
 		.predictor_state(o_branch_predictor_state),
 		.taken(o_branch_predictor_taken)
@@ -363,16 +363,17 @@ o_instruction, o_wb_control_idex, o_wb_control_exmem, o_wb_control_memwb, o_r0, 
 
 	wire temp0;
 	wire temp1;
-
+	wire temp2;
 	wire branch_condition;
 	assign branch_condition = EX_control_IDEX[8] & bcond;
 
-	assign is_bj = EX_control_IDEX[8] | EX_control_IDEX[7];
-	assign actual_taken = branch_condition | EX_control_IDEX[7] | EX_control_IDEX[6];
-	assign wrong_prediction = EX_control_IDEX[8] ? temp1 : temp0;
+	assign predict = EX_control_IDEX[8] | EX_control_IDEX[7];
+	assign actual_taken = branch_condition | EX_control_IDEX[7];
+	assign wrong_prediction = temp2 | EX_control_IDEX[6];
+	assign temp0 = taken_IDEX ^ branch_condition;
+	assign temp1 = !taken_IDEX & EX_control_IDEX[7];
+	assign temp2 = EX_control_IDEX[8] ? temp0: temp1;
 	assign actual_PC = EX_control_IDEX[6] ? o_source_A_MUX : (EX_control_IDEX[7] ? jump_target_IDEX : (branch_condition ? branch_target_IDEX : PC_IDEX + 1'b1));
-	assign temp1 = taken_IDEX ^ branch_condition;
-	assign temp0 = (taken_IDEX ^ EX_control_IDEX[7]) | EX_control_IDEX[6];
 
 	always @(posedge clk) begin
 		// updating EXMEM register
