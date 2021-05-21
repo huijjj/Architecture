@@ -31,7 +31,7 @@ module cpu_TB();
 	wire o_data_write_delay;
 
 	// instantiate the unit under test
-	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
+	cpu_baseline UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 		// ,o_instruction_IFID, o_instruction_mem_state, o_instruction_read_delay, o_data_mem_state, o_data_read_delay, o_data_write_delay);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 

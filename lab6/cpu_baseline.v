@@ -208,9 +208,10 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 		end
 
 		// instruction fetch
-		if(EX_control_IDEX[6] | wrong_prediction | !reset_n) begin // flush
+		if(EX_control_IDEX[6] | wrong_prediction) begin // flush
 			instruction_IFID <= 16'hb000;
 			instruction_mem <= 2'b00;
+			PC <= o_PC_source_MUX;
 		end
 		else if(o_hazard_detection_unit | o_control_unit[14]) begin // stall
 			instruction_IFID <= instruction_IFID;
@@ -428,25 +429,28 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 	// memory latency
 
 	always @(posedge clk) begin
-		case(instruction_mem) begin
-			2'b00: begin
-				if(read_m1) begin
-					instruction_mem <= 2'b01;
+		if(reset_n) begin
+			case(instruction_mem)
+				2'b00: begin
+					if(read_m1) begin
+						instruction_mem <= 2'b01;
+					end
+					else begin
+						instruction_mem <= 2'b00;
+					end
 				end
-				else begin
+				2'b01: begin
+					instruction_mem <= 2'b10;
+				end
+				2'b10: begin
 					instruction_mem <= 2'b00;
 				end
-			end
-			2'b01: begin
-				instruction_mem <= 2'b10;
-			end
-			2'b10: begin
-				instruction_mem <= 2'b00;
-			end
-			default: begin
-				instruction_mem <= 2'b00;
-			end
-		endcase
+				default: begin
+					instruction_mem <= 2'b00;
+				end
+			endcase
+		end
+
 		// case (data_mem)
 		// 	2'b00:
 		// 	2'b01:
