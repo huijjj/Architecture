@@ -7,6 +7,8 @@
 `include "hazard.v"
 `include "utils.v"
 `include "forwarding_unit.v"
+`include "cache.v"
+
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 
@@ -34,6 +36,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	reg [`WORD_SIZE-1:0] instruction_count;
 	reg halt;
 	reg [`WORD_SIZE-1:0] output_port_reg;
+	wire i_cache_hit;
 
 	// IF/ID registers
 	reg [`WORD_SIZE-1:0] instruction_IFID;
@@ -153,6 +156,11 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		end
 	end
 	
+
+	// for cache connection
+	wire [15:0] o_cache_data;
+
+
 	// IF
 	wire o_branch_predictor_taken;
 	wire [1:0] o_branch_predictor_state;
@@ -188,24 +196,28 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	wire [17:0] o_control_unit;
 	wire [17:0] controls;
 
-	assign read_m1 = !halt & !(o_hazard_detection_unit | controls[14]) & reset_n;
-	assign address1 = PC;
+	
+	
 
 	always @(posedge clk) begin
 		// PC update
-		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n) begin		
+		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n & i_cache_hit) begin		
 			PC <= o_PC_source_MUX;
 		end
 
 		// instruction fetch
-		if(EX_control_IDEX[6] | wrong_prediction | !reset_n) begin // flush
+		if(EX_control_IDEX[6] | wrong_prediction) begin // flush
 			instruction_IFID <= 16'hb000;
+			PC <= o_PC_source_MUX;
 		end
 		else if(o_hazard_detection_unit | o_control_unit[14]) begin // stall
 			instruction_IFID <= instruction_IFID;
 		end
+		else if(i_cache_hit) begin
+			instruction_IFID <= o_cache_data;
+		end
 		else begin
-			instruction_IFID <= data1;
+			instruction_IFID <= 16'hb000;
 		end
 
 		//updating IFID register
@@ -407,6 +419,24 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	end
 
 	assign num_inst = instruction_count;
+
+
+	// instruction cache
+	insturction_cache i_cache(
+		.addr(PC),
+		.i_data(data1),
+		.instruction_count(num_inst),
+		.read(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n),
+		.clk(clk),
+		.flush(EX_control_IDEX[6] | wrong_prediction),
+		.address(address1),
+		.o_data(o_cache_data),
+		.hit(i_cache_hit),
+		.read_m1(read_m1)
+	);
+
+
+
 
 endmodule
 
