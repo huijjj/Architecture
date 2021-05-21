@@ -160,11 +160,12 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	wire [`WORD_SIZE-1:0] actual_PC;
 	wire actual_taken;
 	wire predict;
+	wire [`WORD_SIZE-1:0] target_PC;
 	branch_predictor branch_predictor(
 		.clk(clk),
 		.reset_n(reset_n),
 		.PC(PC),
-		.actual_PC(actual_PC),
+		.actual_PC(target_PC),
 		.branch_PC(PC_IDEX),
 		.actual_taken(actual_taken),
 		.prev_state(predictor_state_IDEX),
@@ -353,6 +354,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	assign temp1 = !taken_IDEX & EX_control_IDEX[7];
 	assign temp2 = EX_control_IDEX[8] ? temp0: temp1;
 	assign actual_PC = EX_control_IDEX[6] ? o_source_A_MUX : (EX_control_IDEX[7] ? jump_target_IDEX : (branch_condition ? branch_target_IDEX : PC_IDEX + 1'b1));
+	assign target_PC = EX_control_IDEX[8] ? branch_target_IDEX: jump_target_IDEX;
 
 	always @(posedge clk) begin
 		// updating EXMEM register
