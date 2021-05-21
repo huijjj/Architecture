@@ -8,7 +8,8 @@
 `include "utils.v"
 `include "forwarding_unit.v"
 
-module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
+module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
+	o_instruction_IFID, o_instruction_mem_state, o_instruction_read_delay, o_data_mem_state, o_data_read_delay, o_data_write_delay);
 
 	input clk;
 	input reset_n;
@@ -25,17 +26,23 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 	output reg [`WORD_SIZE-1:0] num_inst;
 	output reg [`WORD_SIZE-1:0] output_port;
 	output is_halted;
+	
+	// for Test
+	output [`WORD_SIZE-1:0] o_instruction_IFID;
+	output [1:0] o_instruction_mem_state;
+	output o_instruction_read_delay;
+	output [1:0] o_data_mem_state;
+	output o_data_read_delay;
+	output o_data_write_delay;
 
-	input read_delay;
+
+
 
 	reg instruction_read_delay;
 	reg data_read_delay;
 	reg data_write_delay;
 	reg [1:0] instruction_mem_state;
 	reg [1:0] data_mem_state;
-
-
-
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -211,7 +218,7 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		// PC update
-		if(instruction_read_delay) begin
+		if(instruction_mem_state != 2'b10) begin
 			PC <= PC;
 		end
 		else if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n) begin		
@@ -222,11 +229,14 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 		end
 
 		// instruction fetch
-		if(EX_control_IDEX[6] | wrong_prediction | !reset_n | instruction_read_delay) begin // flush
+		if(EX_control_IDEX[6] | wrong_prediction | !reset_n) begin // flush
 			instruction_IFID <= 16'hb000; // b000 is nop
 		end
 		else if(o_hazard_detection_unit | o_control_unit[14]) begin // stall
 			instruction_IFID <= instruction_IFID;
+		end
+		else if(instruction_mem_state != 2'b10) begin
+			instruction_IFID <= 16'h0000;
 		end
 		else begin
 			instruction_IFID <= data1;
@@ -510,10 +520,6 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 
 
-
-
-
-
 	always @(posedge clk) begin
 		case(instruction_mem_state) 
 			2'b00: begin
@@ -571,7 +577,13 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 		endcase
 	end
 
-
+	// for test
+	assign o_instruction_IFID = instruction_IFID;
+	assign o_instruction_mem_state = instruction_mem_state;
+	assign o_instruction_read_delay = instruction_read_delay;
+	assign o_data_mem_state = data_mem_state;
+	assign o_data_read_delay = data_read_delay;
+	assign o_data_write_delay = data_write_delay;
 
 endmodule
 
