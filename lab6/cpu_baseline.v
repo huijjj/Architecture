@@ -37,72 +37,6 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 
 
-
-	always @(posedge clk) begin
-		case(instruction_mem_state) 
-			2'b00: begin
-				if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n) begin // readm1 == 1
-					instruction_mem_state <= 2'b01;
-					instruction_read_delay <= 1'b1;
-				end
-				else begin
-					instruction_mem_state <= 2'b00;
-					instruction_read_delay <= 1'b0;
-				end
-			end
-			2'b01: begin
-				instruction_mem_state <= 2'b10;
-				instruction_read_delay <= instruction_read_delay;
-			end
-			2'b10: begin
-				instruction_mem_state <= 2'b00;
-				instruction_read_delay <= 1'b0;
-			end
-			default: begin
-				instruction_mem_state <= 2'b00;
-				instruction_read_delay <= 1'b0;
-			end
-		endcase
-		case(data_mem_state) 
-			2'b00: begin
-				if(MEM_control_EXMEM[1]) begin // mem read
-					data_mem_state <= 2'b01;
-					data_read_delay <= 1'b1;
-				end
-				else if(MEM_control_EXMEM[0]) begin // mem write
-					data_mem_state <= 2'b01;
-					data_write_delay <= 1'b1;	
-				end
-				else begin
-					data_mem_state <= data_mem_state;
-				end
-			end
-			2'b01: begin
-				data_mem_state <= 2'b10;
-				data_read_delay <= data_read_delay;
-				data_write_delay <= data_write_delay;
-			end
-			2'b10: begin
-				data_mem_state <= 2'b00;
-				data_read_delay <= 1'b0;
-				data_write_delay <= 1'b0;
-			end
-			default: begin
-				data_mem_state <= 2'b00;
-				data_read_delay <= 1'b0;
-				data_write_delay <= 1'b0;
-			end
-		endcase
-	end
-
-	// // MEM
-	// assign read_m2 = MEM_control_EXMEM[1];
-	// assign address2 = aluout_EXMEM;
-	// assign data2 = MEM_control_EXMEM[1] ? 16'bz : regout2_EXMEM;
-	// assign write_m2 = MEM_control_EXMEM[0];
-
-
-
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
 	reg [`WORD_SIZE-1:0] instruction_count;
@@ -573,6 +507,71 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 	end
 
 	assign num_inst = instruction_count;
+
+
+
+
+
+
+
+	always @(posedge clk) begin
+		case(instruction_mem_state) 
+			2'b00: begin
+				if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n) begin // readm1 == 1
+					instruction_mem_state <= 2'b01;
+					instruction_read_delay <= 1'b1;
+				end
+				else begin
+					instruction_mem_state <= 2'b00;
+					instruction_read_delay <= 1'b0;
+				end
+			end
+			2'b01: begin
+				instruction_mem_state <= 2'b10;
+				instruction_read_delay <= instruction_read_delay;
+			end
+			2'b10: begin
+				instruction_mem_state <= 2'b00;
+				instruction_read_delay <= 1'b0;
+			end
+			default: begin
+				instruction_mem_state <= 2'b00;
+				instruction_read_delay <= 1'b0;
+			end
+		endcase
+		case(data_mem_state) 
+			2'b00: begin
+				if(MEM_control_EXMEM[1]) begin // mem read
+					data_mem_state <= 2'b01;
+					data_read_delay <= 1'b1;
+				end
+				else if(MEM_control_EXMEM[0]) begin // mem write
+					data_mem_state <= 2'b01;
+					data_write_delay <= 1'b1;	
+				end
+				else begin
+					data_mem_state <= data_mem_state;
+				end
+			end
+			2'b01: begin
+				data_mem_state <= 2'b10;
+				data_read_delay <= data_read_delay;
+				data_write_delay <= data_write_delay;
+			end
+			2'b10: begin
+				data_mem_state <= 2'b00;
+				data_read_delay <= 1'b0;
+				data_write_delay <= 1'b0;
+			end
+			default: begin
+				data_mem_state <= 2'b00;
+				data_read_delay <= 1'b0;
+				data_write_delay <= 1'b0;
+			end
+		endcase
+	end
+
+
 
 endmodule
 
