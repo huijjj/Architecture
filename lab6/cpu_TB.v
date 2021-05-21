@@ -23,12 +23,6 @@ module cpu_TB();
 	wire is_halted;				// set if the cpu is halted
 
 	// for Test
-	wire [`WORD_SIZE-1:0] o_instruction_IFID;
-	wire [1:0] o_instruction_mem_state;
-	wire o_instruction_read_delay;
-	wire [1:0] o_data_mem_state;
-	wire o_data_read_delay;
-	wire o_data_write_delay;
 
 	// instantiate the unit under test
 	cpu_baseline UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);

@@ -203,8 +203,18 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		// PC update
-		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n & (instruction_mem == 2'b10)) begin		
-			PC <= o_PC_source_MUX;
+		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n & (instruction_mem == 2'b10)) begin
+			if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+				if(data_mem == 2'b10) begin
+					PC <= o_PC_source_MUX;
+				end
+				else begin
+					PC <= PC;
+				end
+			end
+			else begin
+				PC <= o_PC_source_MUX;
+			end
 		end
 
 		// instruction fetch
@@ -224,9 +234,23 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 		end
 
 		//updating IFID register
-		taken_IFID <= o_branch_predictor_taken;
-		predictor_state_IFID <= o_branch_predictor_state;
-		PC_IFID <= PC;
+		if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+			if(data_mem == 2'b10) begin
+				taken_IFID <= o_branch_predictor_taken;
+				predictor_state_IFID <= o_branch_predictor_state;
+				PC_IFID <= PC;
+			end
+			else begin
+				taken_IFID <= taken_IFID;
+				predictor_state_IFID <= predictor_state_IFID;
+				PC_IFID <= PC_IFID;
+			end
+		end
+		else begin
+			taken_IFID <= o_branch_predictor_taken;
+			predictor_state_IFID <= o_branch_predictor_state;
+			PC_IFID <= PC;
+		end	
 	end
 
 	// ID
@@ -308,20 +332,56 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		// updating IDEX register
-		regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
-		regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
-		write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
-		taken_IDEX <= taken_IFID;
-		imm_IDEX <= o_imm_gen;
-		jump_target_IDEX <= o_make_address;
-		branch_target_IDEX <= o_adder;
-		predictor_state_IDEX <= predictor_state_IFID;
-		PC_IDEX <= PC_IFID;
-		EX_control_IDEX <= controls[8:0];
-		MEM_control_IDEX <= controls[10:9];
-		WB_control_IDEX <= WB_control_temp;
-		rs_IDEX <= instruction_IFID[11:10];
-		rt_IDEX <= instruction_IFID[9:8];
+		if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+			if(data_mem == 2'b10) begin
+				regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
+				regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
+				write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
+				taken_IDEX <= taken_IFID;
+				imm_IDEX <= o_imm_gen;
+				jump_target_IDEX <= o_make_address;
+				branch_target_IDEX <= o_adder;
+				predictor_state_IDEX <= predictor_state_IFID;
+				PC_IDEX <= PC_IFID;
+				EX_control_IDEX <= controls[8:0];
+				MEM_control_IDEX <= controls[10:9];
+				WB_control_IDEX <= WB_control_temp;
+				rs_IDEX <= instruction_IFID[11:10];
+				rt_IDEX <= instruction_IFID[9:8];
+			end
+			else begin
+				regout1_IDEX <= regout1_IDEX;
+				regout2_IDEX <= regout2_IDEX;
+				write_dest_IDEX <=write_dest_IDEX;
+				taken_IDEX <= taken_IDEX;
+				imm_IDEX <= imm_IDEX;
+				jump_target_IDEX <= jump_target_IDEX;
+				branch_target_IDEX <= branch_target_IDEX;
+				predictor_state_IDEX <= predictor_state_IDEX;
+				PC_IDEX <= PC_IDEX;
+				EX_control_IDEX <= EX_control_IDEX;
+				MEM_control_IDEX <= MEM_control_IDEX;
+				WB_control_IDEX <= WB_control_IDEX;
+				rs_IDEX <= rs_IDEX;
+				rt_IDEX <= rt_IDEX;
+			end
+		end
+		else begin
+			regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
+			regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
+			write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
+			taken_IDEX <= taken_IFID;
+			imm_IDEX <= o_imm_gen;
+			jump_target_IDEX <= o_make_address;
+			branch_target_IDEX <= o_adder;
+			predictor_state_IDEX <= predictor_state_IFID;
+			PC_IDEX <= PC_IFID;
+			EX_control_IDEX <= controls[8:0];
+			MEM_control_IDEX <= controls[10:9];
+			WB_control_IDEX <= WB_control_temp;
+			rs_IDEX <= instruction_IFID[11:10];
+			rt_IDEX <= instruction_IFID[9:8];
+		end	
 	end
 
 	// EX
@@ -373,13 +433,35 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		// updating EXMEM register
-		regout1_EXMEM <= o_source_A_MUX;
-		regout2_EXMEM <= o_source_B_MUX;
-		aluout_EXMEM <= o_alu;
-		write_dest_EXMEM <= write_dest_IDEX;
-		PC_EXMEM <= PC_IDEX;
-		MEM_control_EXMEM <= MEM_control_IDEX;
-		WB_control_EXMEM <= WB_control_IDEX;
+		if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+			if(data_mem == 2'b10) begin
+				regout1_EXMEM <= o_source_A_MUX;
+				regout2_EXMEM <= o_source_B_MUX;
+				aluout_EXMEM <= o_alu;
+				write_dest_EXMEM <= write_dest_IDEX;
+				PC_EXMEM <= PC_IDEX;
+				MEM_control_EXMEM <= MEM_control_IDEX;
+				WB_control_EXMEM <= WB_control_IDEX;
+			end
+			else begin
+				regout1_EXMEM <= regout1_EXMEM;
+				regout2_EXMEM <= regout2_EXMEM;
+				aluout_EXMEM <= aluout_EXMEM;
+				write_dest_EXMEM <= write_dest_EXMEM;
+				PC_EXMEM <= PC_EXMEM;
+				MEM_control_EXMEM <= MEM_control_EXMEM;
+				WB_control_EXMEM <= WB_control_EXMEM;
+			end
+		end
+		else begin
+			regout1_EXMEM <= o_source_A_MUX;
+			regout2_EXMEM <= o_source_B_MUX;
+			aluout_EXMEM <= o_alu;
+			write_dest_EXMEM <= write_dest_IDEX;
+			PC_EXMEM <= PC_IDEX;
+			MEM_control_EXMEM <= MEM_control_IDEX;
+			WB_control_EXMEM <= WB_control_IDEX;
+		end
 	end
 
 
@@ -391,12 +473,32 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		// updating MEMWB registers
-		regout1_MEMWB <= regout1_EXMEM;
-		aluout_MEMWB <= aluout_EXMEM;
-		data_MEMWB <= data2;
-		write_dest_MEMWB <= write_dest_EXMEM;
-		PC_MEMWB <= PC_EXMEM;
-		WB_control_MEMWB <= WB_control_EXMEM;
+		if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+			if(data_mem == 2'b10) begin
+				regout1_MEMWB <= regout1_EXMEM;
+				aluout_MEMWB <= aluout_EXMEM;
+				data_MEMWB <= data2;
+				write_dest_MEMWB <= write_dest_EXMEM;
+				PC_MEMWB <= PC_EXMEM;
+				WB_control_MEMWB <= WB_control_EXMEM;
+			end
+			else begin
+				regout1_MEMWB <= regout1_MEMWB;
+				aluout_MEMWB <= aluout_MEMWB;
+				data_MEMWB <= data_MEMWB;
+				write_dest_MEMWB <= write_dest_MEMWB;
+				PC_MEMWB <= PC_MEMWB;
+				WB_control_MEMWB <= WB_control_MEMWB;
+			end
+		end
+		else begin
+			regout1_MEMWB <= regout1_EXMEM;
+			aluout_MEMWB <= aluout_EXMEM;
+			data_MEMWB <= data2;
+			write_dest_MEMWB <= write_dest_EXMEM;
+			PC_MEMWB <= PC_EXMEM;
+			WB_control_MEMWB <= WB_control_EXMEM;
+		end
 	end
 
 	
@@ -408,7 +510,17 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 
 	always @(posedge clk) begin
 		if(WB_control_MEMWB[4]) begin
-			instruction_count <= instruction_count + 1;
+			if(MEM_control_EXMEM[1] | MEM_control_EXMEM[0]) begin
+				if(data_mem != 2'b10) begin
+					instruction_count <= instruction_count;
+				end
+				else begin
+					instruction_count <= instruction_count + 1;
+				end
+			end
+			else begin
+				instruction_count <= instruction_count + 1;
+			end
 		end
 		else begin
 			instruction_count <= instruction_count;
@@ -451,12 +563,25 @@ module cpu_baseline(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, a
 			endcase
 		end
 
-		// case (data_mem)
-		// 	2'b00:
-		// 	2'b01:
-		// 	2'b10:
-		// 	default: 
-		// endcase
+		case (data_mem)
+			2'b00:begin
+				if(read_m2 | write_m2) begin
+					data_mem <= 2'b01;
+				end
+				else begin
+					data_mem <= 2'b00;
+				end
+			end
+			2'b01:begin
+				data_mem <= 2'b10;
+			end
+			2'b10:begin
+				data_mem <= 2'b00;
+			end
+			default: begin
+				data_mem <= 2'b00;
+			end
+		endcase
 	end
 
 endmodule
