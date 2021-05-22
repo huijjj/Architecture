@@ -144,11 +144,12 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                         end
                     end
                     else begin // miss
-                        state <= 3'b001;
-                        address1 <= block0;
-                        temp_tag <= tag;
-                        temp_last_access <= instruction_count;
-                        read1 <= 1;
+                        if(flush) begin
+                            state <= 3'b000;
+                        end
+                        else begin
+                            state <= 3'b001;
+                        end
                     end
                 end
                 else begin
@@ -163,10 +164,17 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                     read1 <= 0;
                 end
                 else begin
-                    temp_data[0] <= i_data;
-                    address1 <= block1;
-                    state <= 3'b010;
+                    address1 <= block0;
+                    temp_tag <= tag;
+                    temp_last_access <= instruction_count;
                     read1 <= 1;
+
+
+
+
+                    
+                    state <= 3'b010;
+            
                 end
             end
             3'b010: begin
@@ -175,10 +183,13 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                     read1 <= 0;
                 end
                 else begin
-                    temp_data[1] <= i_data;
-                    address1 <= block2;
+                    temp_data[0] <= i_data;
+                    address1 <= block1;
                     state <= 3'b011;
                     read1 <= 1;
+
+
+                    
                 end
             end
             3'b011: begin
@@ -187,10 +198,12 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                     read1 <= 0;
                 end
                 else begin
-                    temp_data[2] <= i_data;
-                    address1 <= block3;
+                    temp_data[1] <= i_data;
+                    address1 <= block2;
                     state <= 3'b100;
                     read1 <= 1;
+
+                
                 end
             end
 
@@ -200,9 +213,13 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                     read1 <= 0;
                 end
                 else begin
-                    temp_data[3] <= i_data;
+                    temp_data[2] <= i_data;
+                    address1 <= block3;
+
+
+                    
                     state <= 3'b101;
-                    read1 <= 0;
+                    read1 <= 1;
                 end
             end
 
@@ -213,10 +230,12 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                     complete <= 0;
                 end
                 else begin
-                    state <= 3'b110;
+                    temp_data[3] <= i_data;
                     read1 <= 0;
+                    state <= 3'b110;
                     complete <= 1;
-                    data <= temp_data[offset];
+
+                    data <= offset == 2'b11 ? i_data : temp_data[offset];
                 end
             end
             
