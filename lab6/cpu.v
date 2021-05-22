@@ -11,7 +11,11 @@
 
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-, o_PC, o_cache, o_hit, o_instruction_IFID, o_state, cache_read_req	
+, o_PC, cache_out, o_hit, o_instruction_IFID, cache_state, cache_read_req, o_x0, o_x1, o_x2, o_x3
+, o_set0_way0_data_0, o_set0_way1_data_0, o_set1_way0_data_0, o_set1_way1_data_0	
+, o_set0_way0_data_1, o_set0_way1_data_1, o_set1_way0_data_1, o_set1_way1_data_1	
+, o_set0_way0_data_2, o_set0_way1_data_2, o_set1_way0_data_2, o_set1_way1_data_2	
+, o_set0_way0_data_3, o_set0_way1_data_3, o_set1_way0_data_3, o_set1_way1_data_3	
 );
 
 	input clk;
@@ -33,11 +37,31 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	//outputs for test
 	output [15:0] o_PC;
-	output [15:0] o_cache;
+	output [15:0] cache_out;
 	output o_hit;
 	output [15:0] o_instruction_IFID;
-	output [2:0] o_state;
+	output [2:0] cache_state;
 	output cache_read_req;
+	output [15:0] o_x0;
+	output [15:0] o_x1;
+	output [15:0] o_x2;
+	output [15:0] o_x3;
+	output [15:0] o_set0_way0_data_0;
+	output [15:0] o_set0_way1_data_0;
+	output [15:0] o_set1_way0_data_0;
+	output [15:0] o_set1_way1_data_0;
+	output [15:0] o_set0_way0_data_1;
+	output [15:0] o_set0_way1_data_1;
+	output [15:0] o_set1_way0_data_1;
+	output [15:0] o_set1_way1_data_1;
+	output [15:0] o_set0_way0_data_2;
+	output [15:0] o_set0_way1_data_2;
+	output [15:0] o_set1_way0_data_2;
+	output [15:0] o_set1_way1_data_2;
+	output [15:0] o_set0_way0_data_3;
+	output [15:0] o_set0_way1_data_3;
+	output [15:0] o_set1_way0_data_3;
+	output [15:0] o_set1_way1_data_3;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -205,7 +229,6 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	wire [17:0] controls;
 
 	
-	
 
 	always @(posedge clk) begin
 		// PC update
@@ -247,7 +270,11 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.reg_write(WB_control_MEMWB[5]),
 		.write_data(reg_write_data),
 		.read_out1(o_reg_out1),
-		.read_out2(o_reg_out2)
+		.read_out2(o_reg_out2),
+		.o_x0(o_x0),
+		.o_x1(o_x1),
+		.o_x2(o_x2),
+		.o_x3(o_x3)
 	);
 
 	hazard_detect hazard_detection_unit(
@@ -431,7 +458,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	// instruction cache
 	insturction_cache i_cache(
-		.addr(PC),
+		.i_address(PC),
 		.i_data(data1),
 		.reset_n(reset_n),
 		.instruction_count(num_inst),
@@ -442,12 +469,28 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.o_data(o_cache_data),
 		.hit(i_cache_hit),
 		.read_m1(read_m1),
-		.o_state(o_state)
+		.o_state(cache_state),
+		.o_set0_way0_data_0(o_set0_way0_data_0),
+		.o_set0_way1_data_0(o_set0_way1_data_0),
+		.o_set1_way0_data_0(o_set1_way0_data_0),
+		.o_set1_way1_data_0(o_set1_way1_data_0),
+		.o_set0_way0_data_1(o_set0_way0_data_1),
+		.o_set0_way1_data_1(o_set0_way1_data_1),
+		.o_set1_way0_data_1(o_set1_way0_data_1),
+		.o_set1_way1_data_1(o_set1_way1_data_1),
+		.o_set0_way0_data_2(o_set0_way0_data_2),
+		.o_set0_way1_data_2(o_set0_way1_data_2),
+		.o_set1_way0_data_2(o_set1_way0_data_2),
+		.o_set1_way1_data_2(o_set1_way1_data_2),
+		.o_set0_way0_data_3(o_set0_way0_data_3),
+		.o_set0_way1_data_3(o_set0_way1_data_3),
+		.o_set1_way0_data_3(o_set1_way0_data_3),
+		.o_set1_way1_data_3(o_set1_way1_data_3)
 	);
 
 	// assigning test outputs
 	assign o_PC = PC;
-	assign o_cache = o_cache_data;
+	assign cache_out = o_cache_data;
 	assign o_hit = i_cache_hit;
 	assign o_instruction_IFID = instruction_IFID;
 	assign cache_read_req = !halt & !(o_hazard_detection_unit | controls[14]) & reset_n;

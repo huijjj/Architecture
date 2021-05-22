@@ -24,15 +24,40 @@ module cpu_TB();
 
 	// for Test
 	wire [15:0] o_PC;
-	wire [15:0] o_cache;
+	wire [15:0] cache_out;
 	wire o_hit;
 	wire [15:0] o_instruction_IFID;
-	wire [2:0] o_state;
+	wire [2:0] cache_state;
 	wire cache_read_req;
+	wire [15:0] x0;
+	wire [15:0] x1;
+	wire [15:0] x2;
+	wire [15:0] x3;
+	wire [15:0] set0_way0_data_0;
+	wire [15:0] set0_way1_data_0;
+	wire [15:0] set1_way0_data_0;
+	wire [15:0] set1_way1_data_0;
+	wire [15:0] set0_way0_data_1;
+	wire [15:0] set0_way1_data_1;
+	wire [15:0] set1_way0_data_1;
+	wire [15:0] set1_way1_data_1;
+	wire [15:0] set0_way0_data_2;
+	wire [15:0] set0_way1_data_2;
+	wire [15:0] set1_way0_data_2;
+	wire [15:0] set1_way1_data_2;
+	wire [15:0] set0_way0_data_3;
+	wire [15:0] set0_way1_data_3;
+	wire [15:0] set1_way0_data_3;
+	wire [15:0] set1_way1_data_3;
 
 	// instantiate the unit under test
 	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-	, o_PC, o_cache, o_hit, o_instruction_IFID, o_state, cache_read_req);
+	, o_PC, cache_out, o_hit, o_instruction_IFID, cache_state, cache_read_req, x0, x1, x2, x3
+	, set0_way0_data_0, set0_way1_data_0, set1_way0_data_0, set1_way1_data_0
+	, set0_way0_data_1, set0_way1_data_1, set1_way0_data_1, set1_way1_data_1
+	, set0_way0_data_2, set0_way1_data_2, set1_way0_data_2, set1_way1_data_2
+	, set0_way0_data_3, set0_way1_data_3, set1_way0_data_3, set1_way1_data_3
+	);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 
 	// initialize inputs

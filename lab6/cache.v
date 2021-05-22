@@ -2,7 +2,12 @@
 
 
 module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush,
- output [15:0] address, output reg [15:0] o_data, output hit, output read_m1, output [2:0] o_state);
+ output [15:0] address, output reg [15:0] o_data, output hit, output read_m1, output [2:0] o_state,
+ output [15:0] o_set0_way0_data_0, output [15:0] o_set0_way1_data_0, output [15:0] o_set1_way0_data_0, output [15:0] o_set1_way1_data_0,
+ output [15:0] o_set0_way0_data_1, output [15:0] o_set0_way1_data_1, output [15:0] o_set1_way0_data_1, output [15:0] o_set1_way1_data_1,
+ output [15:0] o_set0_way0_data_2, output [15:0] o_set0_way1_data_2, output [15:0] o_set1_way0_data_2, output [15:0] o_set1_way1_data_2,
+ output [15:0] o_set0_way0_data_3, output [15:0] o_set0_way1_data_3, output [15:0] o_set1_way0_data_3, output [15:0] o_set1_way1_data_3
+ );
     
 	reg [2:0] state;
 	reg [15:0] address1;
@@ -42,6 +47,7 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 	reg is_hit;
     reg [15:0] data;
 
+  
     assign offset = i_address[1:0];
     assign index = i_address[2];
     assign tag = i_address[15:3];
@@ -50,6 +56,9 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 
     reg read1;
     assign read_m1 = read1;
+
+
+
 
     initial begin // reset
         state = 2'b00;
@@ -100,7 +109,7 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     assign temp_hit = (index == 0) ? ((tag == set0_way0_tag) & set0_way0_valid) | ((tag == set0_way1_tag)  & set0_way1_valid)
         : ((tag == set1_way0_tag) & set1_way0_valid) | ((tag == set1_way1_tag)  & set1_way1_valid);
 
-	assign hit = complete | temp_hit;
+	assign hit = temp_hit | (complete & !temp_hit);
 
     wire [15:0] hit_data;
     assign hit_data = temp_hit ? (index == 0) ? (((tag == set0_way0_tag) & set0_way0_valid) ? set0_way0_data[offset] : set0_way1_data[offset]) // hit (index 0)
@@ -314,5 +323,25 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 	// assigning test outputs
 	assign o_state = state;
 	assign address = address1;
+    
+    assign o_set0_way0_data_0 = set0_way0_data[0];
+    assign o_set0_way0_data_1 = set0_way0_data[1];
+    assign o_set0_way0_data_2 = set0_way0_data[2];
+    assign o_set0_way0_data_3 = set0_way0_data[3];
+
+    assign o_set0_way1_data_0 = set0_way1_data[0];
+    assign o_set0_way1_data_1 = set0_way1_data[1];
+    assign o_set0_way1_data_2 = set0_way1_data[2];
+    assign o_set0_way1_data_3 = set0_way1_data[3];
+
+    assign o_set1_way0_data_0 = set1_way0_data[0];
+    assign o_set1_way0_data_1 = set1_way0_data[1];
+    assign o_set1_way0_data_2 = set1_way0_data[2];
+    assign o_set1_way0_data_3 = set1_way0_data[3];
+
+    assign o_set1_way1_data_0 = set1_way1_data[0];
+    assign o_set1_way1_data_1 = set1_way1_data[1];
+    assign o_set1_way1_data_2 = set1_way1_data[2];
+    assign o_set1_way1_data_3 = set1_way1_data[3];
 
 endmodule
