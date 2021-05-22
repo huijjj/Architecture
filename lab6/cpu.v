@@ -11,7 +11,7 @@
 
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-, o_PC, o_cache, o_hit, o_instruction_IFID, o_state
+, o_PC, o_cache, o_hit, o_instruction_IFID, o_state, cache_read_req	
 );
 
 	input clk;
@@ -37,6 +37,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	output o_hit;
 	output [15:0] o_instruction_IFID;
 	output [2:0] o_state;
+	output cache_read_req;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -449,6 +450,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	assign o_cache = o_cache_data;
 	assign o_hit = i_cache_hit;
 	assign o_instruction_IFID = instruction_IFID;
+	assign cache_read_req = !halt & !(o_hazard_detection_unit | controls[14]) & reset_n;
 
 endmodule
 

@@ -28,10 +28,11 @@ module cpu_TB();
 	wire o_hit;
 	wire [15:0] o_instruction_IFID;
 	wire [2:0] o_state;
+	wire cache_read_req;
 
 	// instantiate the unit under test
 	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-	, o_PC, o_cache, o_hit, o_instruction_IFID, o_state);
+	, o_PC, o_cache, o_hit, o_instruction_IFID, o_state, cache_read_req);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 
 	// initialize inputs
