@@ -23,10 +23,15 @@ module cpu_TB();
 	wire is_halted;				// set if the cpu is halted
 
 	// for Test
+	wire [15:0] o_PC;
+	wire [15:0] o_cache;
+	wire o_hit;
+	wire [15:0] o_instruction_IFID;
+	wire [2:0] o_state;
 
 	// instantiate the unit under test
-	cpu_baseline UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
-		// ,o_instruction_IFID, o_instruction_mem_state, o_instruction_read_delay, o_data_mem_state, o_data_read_delay, o_data_write_delay);
+	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
+	, o_PC, o_cache, o_hit, o_instruction_IFID, o_state);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 
 	// initialize inputs

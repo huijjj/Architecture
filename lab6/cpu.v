@@ -10,7 +10,9 @@
 `include "cache.v"
 
 
-module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
+module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
+, o_PC, o_cache, o_hit, o_instruction_IFID, o_state
+);
 
 	input clk;
 	input reset_n;
@@ -29,7 +31,12 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	output is_halted;
 
 
-	//TODO: implement datapath of pipelined CPU
+	//outputs for test
+	output [15:0] o_PC;
+	output [15:0] o_cache;
+	output o_hit;
+	output [15:0] o_instruction_IFID;
+	output [2:0] o_state;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -425,6 +432,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	insturction_cache i_cache(
 		.addr(PC),
 		.i_data(data1),
+		.reset_n(reset_n),
 		.instruction_count(num_inst),
 		.read(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n),
 		.clk(clk),
@@ -432,11 +440,15 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.address(address1),
 		.o_data(o_cache_data),
 		.hit(i_cache_hit),
-		.read_m1(read_m1)
+		.read_m1(read_m1),
+		.o_state(o_state)
 	);
 
-
-
+	// assigning test outputs
+	assign o_PC = PC;
+	assign o_cache = o_cache_data;
+	assign o_hit = i_cache_hit;
+	assign o_instruction_IFID = instruction_IFID;
 
 endmodule
 
