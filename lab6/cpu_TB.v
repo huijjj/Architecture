@@ -29,30 +29,42 @@ module cpu_TB();
 	wire [15:0] x1;
 	wire [15:0] x2;
 	wire [15:0] x3;
-	// wire [15:0] set0_way0_data_0;
-	// wire [15:0] set0_way1_data_0;
-	// wire [15:0] set1_way0_data_0;
-	// wire [15:0] set1_way1_data_0;
-	// wire [15:0] set0_way0_data_1;
-	// wire [15:0] set0_way1_data_1;
-	// wire [15:0] set1_way0_data_1;
-	// wire [15:0] set1_way1_data_1;
-	// wire [15:0] set0_way0_data_2;
-	// wire [15:0] set0_way1_data_2;
-	// wire [15:0] set1_way0_data_2;
-	// wire [15:0] set1_way1_data_2;
-	// wire [15:0] set0_way0_data_3;
-	// wire [15:0] set0_way1_data_3;
-	// wire [15:0] set1_way0_data_3;
-	// wire [15:0] set1_way1_data_3;
+	wire [15:0] set0_way0_data_0;
+	wire [15:0] set0_way0_data_1;
+	wire [15:0] set0_way0_data_2;
+	wire [15:0] set0_way0_data_3;
+
+	wire [15:0] set0_way1_data_0;
+	wire [15:0] set0_way1_data_1;
+	wire [15:0] set0_way1_data_2;
+	wire [15:0] set0_way1_data_3;
+
+	wire [15:0] set1_way0_data_0;
+	wire [15:0] set1_way0_data_1;
+	wire [15:0] set1_way0_data_2;
+	wire [15:0] set1_way0_data_3;
+
+	wire [15:0] set1_way1_data_0;
+	wire [15:0] set1_way1_data_1;
+	wire [15:0] set1_way1_data_2;
+	wire [15:0] set1_way1_data_3;
+
+	wire [15:0] o_instruction_IFID;
+	wire [3:0] o_state;
+	wire [15:0] o_input_address;
+	wire o_read_signal;
+	wire o_hit;
+	wire [15:0] o_data_cpu_in;
+	wire [15:0] o_data_cpu_out;
+	wire [15:0] o_cache_addr;
 
 	// instantiate the unit under test
 	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-	, o_PC, x0, x1, x2, x3
-	// , set0_way0_data_0, set0_way1_data_0, set1_way0_data_0, set1_way1_data_0
-	// , set0_way0_data_1, set0_way1_data_1, set1_way0_data_1, set1_way1_data_1
-	// , set0_way0_data_2, set0_way1_data_2, set1_way0_data_2, set1_way1_data_2
-	// , set0_way0_data_3, set0_way1_data_3, set1_way0_data_3, set1_way1_data_3
+	, o_PC, o_instruction_IFID, x0, x1, x2, x3, o_state, o_input_address, o_read_signal, o_hit, o_data_cpu_in, o_data_cpu_out, o_cache_addr
+	, set0_way0_data_0, set0_way1_data_0, set1_way0_data_0, set1_way1_data_0
+	, set0_way0_data_1, set0_way1_data_1, set1_way0_data_1, set1_way1_data_1
+	, set0_way0_data_2, set0_way1_data_2, set1_way0_data_2, set1_way1_data_2
+	, set0_way0_data_3, set0_way1_data_3, set1_way0_data_3, set1_way1_data_3
 	);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 

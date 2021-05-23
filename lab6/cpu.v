@@ -11,11 +11,11 @@
 
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-, o_PC, o_x0, o_x1, o_x2, o_x3
-// , o_set0_way0_data_0, o_set0_way1_data_0, o_set1_way0_data_0, o_set1_way1_data_0	
-// , o_set0_way0_data_1, o_set0_way1_data_1, o_set1_way0_data_1, o_set1_way1_data_1	
-// , o_set0_way0_data_2, o_set0_way1_data_2, o_set1_way0_data_2, o_set1_way1_data_2	
-// , o_set0_way0_data_3, o_set0_way1_data_3, o_set1_way0_data_3, o_set1_way1_data_3	
+, o_PC, o_instruction_IFID, o_x0, o_x1, o_x2, o_x3, o_state, o_input_address, o_read_signal, o_hit, o_data_cpu_in, o_data_cpu_out, o_cache_addr
+, o_set0_way0_data_0, o_set0_way1_data_0, o_set1_way0_data_0, o_set1_way1_data_0	
+, o_set0_way0_data_1, o_set0_way1_data_1, o_set1_way0_data_1, o_set1_way1_data_1	
+, o_set0_way0_data_2, o_set0_way1_data_2, o_set1_way0_data_2, o_set1_way1_data_2	
+, o_set0_way0_data_3, o_set0_way1_data_3, o_set1_way0_data_3, o_set1_way1_data_3	
 );
 
 	input clk;
@@ -37,26 +37,35 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	//outputs for test
 	output [15:0] o_PC;
+	output [15:0] o_instruction_IFID;
 	output [15:0] o_x0;
 	output [15:0] o_x1;
 	output [15:0] o_x2;
 	output [15:0] o_x3;
-	// output [15:0] o_set0_way0_data_0;
-	// output [15:0] o_set0_way1_data_0;
-	// output [15:0] o_set1_way0_data_0;
-	// output [15:0] o_set1_way1_data_0;
-	// output [15:0] o_set0_way0_data_1;
-	// output [15:0] o_set0_way1_data_1;
-	// output [15:0] o_set1_way0_data_1;
-	// output [15:0] o_set1_way1_data_1;
-	// output [15:0] o_set0_way0_data_2;
-	// output [15:0] o_set0_way1_data_2;
-	// output [15:0] o_set1_way0_data_2;
-	// output [15:0] o_set1_way1_data_2;
-	// output [15:0] o_set0_way0_data_3;
-	// output [15:0] o_set0_way1_data_3;
-	// output [15:0] o_set1_way0_data_3;
-	// output [15:0] o_set1_way1_data_3;
+	output [3:0] o_state;
+	output [15:0] o_input_address;
+	output o_read_signal;
+	output o_hit;
+	output [15:0] o_data_cpu_in;
+	output [15:0] o_data_cpu_out;
+	output [15:0] o_cache_addr;
+
+	output [15:0] o_set0_way0_data_0;
+	output [15:0] o_set0_way1_data_0;
+	output [15:0] o_set1_way0_data_0;
+	output [15:0] o_set1_way1_data_0;
+	output [15:0] o_set0_way0_data_1;
+	output [15:0] o_set0_way1_data_1;
+	output [15:0] o_set1_way0_data_1;
+	output [15:0] o_set1_way1_data_1;
+	output [15:0] o_set0_way0_data_2;
+	output [15:0] o_set0_way1_data_2;
+	output [15:0] o_set1_way0_data_2;
+	output [15:0] o_set1_way1_data_2;
+	output [15:0] o_set0_way0_data_3;
+	output [15:0] o_set0_way1_data_3;
+	output [15:0] o_set1_way0_data_3;
+	output [15:0] o_set1_way1_data_3;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -106,6 +115,11 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	reg [1:0] write_dest_MEMWB;
 	reg [`WORD_SIZE-1:0] PC_MEMWB;
 	reg [5:0] WB_control_MEMWB;
+
+	// for data cache hit
+	wire data_cache_hit;
+	wire data_cache_busy;
+	wire [15:0] data_cache_outdata;
 
 	initial begin
 		output_port_reg = 0;
@@ -185,7 +199,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	
 
 	// for cache connection
-	wire [15:0] o_cache_data;
+	wire [15:0] instruction_cache_data;
 
 
 	// IF
@@ -227,29 +241,167 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	always @(posedge clk) begin
 		// PC update
-		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n & i_cache_hit) begin		
-			PC <= o_PC_source_MUX;
+		if(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n & i_cache_hit) begin	
+			if(MEM_control_EXMEM[1]) begin
+				if(data_cache_busy) begin
+					PC <= PC;
+				end
+				else begin
+					if(data_cache_hit) begin
+						PC <= o_PC_source_MUX;
+					end
+					else begin
+						// stall
+						PC <= PC;
+					end
+				end
+			end
+			else if(MEM_control_EXMEM[0]) begin
+				if(data_cache_busy) begin
+					PC <= PC;
+				end
+				else begin
+					// go
+					PC <= o_PC_source_MUX;
+				end
+			end
+			else begin
+				// go
+				PC <= o_PC_source_MUX;
+			end
 		end
 
 		// instruction fetch
 		if(EX_control_IDEX[6] | wrong_prediction) begin // flush
-			instruction_IFID <= 16'hb000;
-			PC <= o_PC_source_MUX;
+			if(MEM_control_EXMEM[1]) begin
+				if(data_cache_busy) begin			
+					instruction_IFID <= instruction_IFID;
+					PC <= PC;				
+				end
+				else begin
+					if(data_cache_hit) begin
+						instruction_IFID <= 16'hb000;
+						PC <= o_PC_source_MUX;
+					end
+					else begin
+						instruction_IFID <= instruction_IFID;
+						PC <= PC; 
+					end
+				end
+			end
+			else if(MEM_control_EXMEM[0]) begin
+				if(data_cache_busy) begin
+					instruction_IFID <= instruction_IFID;
+					PC <= PC; 
+				end
+				else begin				
+					instruction_IFID <= 16'hb000;
+					PC <= o_PC_source_MUX;								
+				end
+			end
+			else begin
+				instruction_IFID <= 16'hb000;
+				PC <= o_PC_source_MUX;								
+			end							
 		end
+
 		else if(o_hazard_detection_unit | o_control_unit[14]) begin // stall
 			instruction_IFID <= instruction_IFID;
 		end
 		else if(i_cache_hit) begin
-			instruction_IFID <= o_cache_data;
+			if(MEM_control_EXMEM[1]) begin
+				if(data_cache_busy) begin
+					instruction_IFID <= instruction_IFID; 
+				end
+				else begin
+					if(data_cache_hit) begin
+						instruction_IFID <= instruction_cache_data;
+					end
+					else begin
+						instruction_IFID <= instruction_IFID; 
+					end
+				end
+			end
+			else if(MEM_control_EXMEM[0]) begin
+				if(data_cache_busy) begin
+					instruction_IFID <= instruction_IFID; 
+				end
+				else begin				
+					instruction_IFID <= instruction_cache_data;									
+				end
+			end
+			else begin
+				instruction_IFID <= instruction_cache_data;									
+			end
 		end
 		else begin
-			instruction_IFID <= 16'hb000;
+			if(MEM_control_EXMEM[1]) begin
+				if(data_cache_busy) begin
+					instruction_IFID <= instruction_IFID; 
+				end
+				else begin
+					if(data_cache_hit) begin
+						instruction_IFID <= 16'hb000;
+					end
+					else begin
+						instruction_IFID <= instruction_IFID; 
+					end
+				end
+			end
+			else if(MEM_control_EXMEM[0]) begin
+				if(data_cache_busy) begin
+					instruction_IFID <= instruction_IFID; 
+				end
+				else begin				
+					instruction_IFID <= 16'hb000;									
+				end
+			end
+			else begin
+				instruction_IFID <= 16'hb000;									
+			end
 		end
 
 		//updating IFID register
-		taken_IFID <= o_branch_predictor_taken;
-		predictor_state_IFID <= o_branch_predictor_state;
-		PC_IFID <= PC;
+		if(MEM_control_EXMEM[1]) begin
+			if(data_cache_busy) begin
+				taken_IFID <= taken_IFID;
+				predictor_state_IFID <= predictor_state_IFID;
+				PC_IFID <= PC_IFID;
+			end
+			else begin
+				if(data_cache_hit) begin
+					// go
+					taken_IFID <= o_branch_predictor_taken;
+					predictor_state_IFID <= o_branch_predictor_state;
+					PC_IFID <= PC;
+				end
+				else begin
+					// stall
+					taken_IFID <= taken_IFID;
+					predictor_state_IFID <= predictor_state_IFID;
+					PC_IFID <= PC_IFID;
+				end
+			end
+		end
+		else if(MEM_control_EXMEM[0]) begin
+			if(data_cache_busy) begin
+				taken_IFID <= taken_IFID;
+				predictor_state_IFID <= predictor_state_IFID;
+				PC_IFID <= PC_IFID;
+			end
+			else begin
+				// go
+				taken_IFID <= o_branch_predictor_taken;
+				predictor_state_IFID <= o_branch_predictor_state;
+				PC_IFID <= PC;
+			end
+		end
+		else begin
+			// go
+			taken_IFID <= o_branch_predictor_taken;
+			predictor_state_IFID <= o_branch_predictor_state;
+			PC_IFID <= PC;
+		end
 	end
 
 	// ID
@@ -335,20 +487,108 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	always @(posedge clk) begin
 		// updating IDEX register
-		regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
-		regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
-		write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
-		taken_IDEX <= taken_IFID;
-		imm_IDEX <= o_imm_gen;
-		jump_target_IDEX <= o_make_address;
-		branch_target_IDEX <= o_adder;
-		predictor_state_IDEX <= predictor_state_IFID;
-		PC_IDEX <= PC_IFID;
-		EX_control_IDEX <= controls[8:0];
-		MEM_control_IDEX <= controls[10:9];
-		WB_control_IDEX <= WB_control_temp;
-		rs_IDEX <= instruction_IFID[11:10];
-		rt_IDEX <= instruction_IFID[9:8];
+		if(MEM_control_EXMEM[1]) begin
+			if(data_cache_busy) begin
+				regout1_IDEX <= regout1_IDEX;
+				regout2_IDEX <= regout2_IDEX;
+				write_dest_IDEX <=write_dest_IDEX;
+				taken_IDEX <= taken_IDEX;
+				imm_IDEX <= imm_IDEX;
+				jump_target_IDEX <= jump_target_IDEX;
+				branch_target_IDEX <= branch_target_IDEX;
+				predictor_state_IDEX <= predictor_state_IDEX;
+				PC_IDEX <= PC_IDEX;
+				EX_control_IDEX <= EX_control_IDEX;
+				MEM_control_IDEX <= MEM_control_IDEX;
+				WB_control_IDEX <= WB_control_IDEX;
+				rs_IDEX <= rs_IDEX;
+				rt_IDEX <= rt_IDEX;
+			end
+			else begin
+				if(data_cache_hit) begin					
+					regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
+					regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
+					write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
+					taken_IDEX <= taken_IFID;
+					imm_IDEX <= o_imm_gen;
+					jump_target_IDEX <= o_make_address;
+					branch_target_IDEX <= o_adder;
+					predictor_state_IDEX <= predictor_state_IFID;
+					PC_IDEX <= PC_IFID;
+					EX_control_IDEX <= controls[8:0];
+					MEM_control_IDEX <= controls[10:9];
+					WB_control_IDEX <= WB_control_temp;
+					rs_IDEX <= instruction_IFID[11:10];
+					rt_IDEX <= instruction_IFID[9:8];
+				end
+				else begin
+					regout1_IDEX <= regout1_IDEX;
+					regout2_IDEX <= regout2_IDEX;
+					write_dest_IDEX <=write_dest_IDEX;
+					taken_IDEX <= taken_IDEX;
+					imm_IDEX <= imm_IDEX;
+					jump_target_IDEX <= jump_target_IDEX;
+					branch_target_IDEX <= branch_target_IDEX;
+					predictor_state_IDEX <= predictor_state_IDEX;
+					PC_IDEX <= PC_IDEX;
+					EX_control_IDEX <= EX_control_IDEX;
+					MEM_control_IDEX <= MEM_control_IDEX;
+					WB_control_IDEX <= WB_control_IDEX;
+					rs_IDEX <= rs_IDEX;
+					rt_IDEX <= rt_IDEX;
+				end
+			end
+		end
+		else if(MEM_control_EXMEM[0]) begin
+			if(data_cache_busy) begin
+				regout1_IDEX <= regout1_IDEX;
+				regout2_IDEX <= regout2_IDEX;
+				write_dest_IDEX <=write_dest_IDEX;
+				taken_IDEX <= taken_IDEX;
+				imm_IDEX <= imm_IDEX;
+				jump_target_IDEX <= jump_target_IDEX;
+				branch_target_IDEX <= branch_target_IDEX;
+				predictor_state_IDEX <= predictor_state_IDEX;
+				PC_IDEX <= PC_IDEX;
+				EX_control_IDEX <= EX_control_IDEX;
+				MEM_control_IDEX <= MEM_control_IDEX;
+				WB_control_IDEX <= WB_control_IDEX;
+				rs_IDEX <= rs_IDEX;
+				rt_IDEX <= rt_IDEX;
+			end
+			else begin
+				regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
+				regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
+				write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
+				taken_IDEX <= taken_IFID;
+				imm_IDEX <= o_imm_gen;
+				jump_target_IDEX <= o_make_address;
+				branch_target_IDEX <= o_adder;
+				predictor_state_IDEX <= predictor_state_IFID;
+				PC_IDEX <= PC_IFID;
+				EX_control_IDEX <= controls[8:0];
+				MEM_control_IDEX <= controls[10:9];
+				WB_control_IDEX <= WB_control_temp;
+				rs_IDEX <= instruction_IFID[11:10];
+				rt_IDEX <= instruction_IFID[9:8];
+			end
+		end
+		else begin
+			regout1_IDEX <= d3_regout1 ? reg_write_data : o_reg_out1;
+			regout2_IDEX <= d3_regout2 ? reg_write_data : o_reg_out2;
+			write_dest_IDEX <= o_control_unit[13] ? 2 : (o_control_unit[16] ? instruction_IFID[9:8] : instruction_IFID[7:6]);
+			taken_IDEX <= taken_IFID;
+			imm_IDEX <= o_imm_gen;
+			jump_target_IDEX <= o_make_address;
+			branch_target_IDEX <= o_adder;
+			predictor_state_IDEX <= predictor_state_IFID;
+			PC_IDEX <= PC_IFID;
+			EX_control_IDEX <= controls[8:0];
+			MEM_control_IDEX <= controls[10:9];
+			WB_control_IDEX <= WB_control_temp;
+			rs_IDEX <= instruction_IFID[11:10];
+			rt_IDEX <= instruction_IFID[9:8];
+		end
 	end
 
 	// EX
@@ -400,30 +640,147 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	always @(posedge clk) begin
 		// updating EXMEM register
-		regout1_EXMEM <= o_source_A_MUX;
-		regout2_EXMEM <= o_source_B_MUX;
-		aluout_EXMEM <= o_alu;
-		write_dest_EXMEM <= write_dest_IDEX;
-		PC_EXMEM <= PC_IDEX;
-		MEM_control_EXMEM <= MEM_control_IDEX;
-		WB_control_EXMEM <= WB_control_IDEX;
+		if(MEM_control_EXMEM[1]) begin
+			if(data_cache_busy) begin
+				regout1_EXMEM <= regout1_EXMEM;
+				regout2_EXMEM <= regout2_EXMEM;
+				aluout_EXMEM <= aluout_EXMEM;
+				write_dest_EXMEM <= write_dest_EXMEM;
+				PC_EXMEM <= PC_EXMEM;
+				MEM_control_EXMEM <= MEM_control_EXMEM;
+				WB_control_EXMEM <= WB_control_EXMEM;
+			end
+			else begin
+				if(data_cache_hit) begin
+					// go
+					regout1_EXMEM <= o_source_A_MUX;
+					regout2_EXMEM <= o_source_B_MUX;
+					aluout_EXMEM <= o_alu;
+					write_dest_EXMEM <= write_dest_IDEX;
+					PC_EXMEM <= PC_IDEX;
+					MEM_control_EXMEM <= MEM_control_IDEX;
+					WB_control_EXMEM <= WB_control_IDEX;
+				end
+				else begin
+					// stall
+					regout1_EXMEM <= regout1_EXMEM;
+					regout2_EXMEM <= regout2_EXMEM;
+					aluout_EXMEM <= aluout_EXMEM;
+					write_dest_EXMEM <= write_dest_EXMEM;
+					PC_EXMEM <= PC_EXMEM;
+					MEM_control_EXMEM <= MEM_control_EXMEM;
+					WB_control_EXMEM <= WB_control_EXMEM;
+				end
+			end
+		end
+		else if(MEM_control_EXMEM[0]) begin
+			if(data_cache_busy) begin
+				regout1_EXMEM <= regout1_EXMEM;
+				regout2_EXMEM <= regout2_EXMEM;
+				aluout_EXMEM <= aluout_EXMEM;
+				write_dest_EXMEM <= write_dest_EXMEM;
+				PC_EXMEM <= PC_EXMEM;
+				MEM_control_EXMEM <= MEM_control_EXMEM;
+				WB_control_EXMEM <= WB_control_EXMEM;
+			end
+			else begin
+				// go
+				regout1_EXMEM <= o_source_A_MUX;
+				regout2_EXMEM <= o_source_B_MUX;
+				aluout_EXMEM <= o_alu;
+				write_dest_EXMEM <= write_dest_IDEX;
+				PC_EXMEM <= PC_IDEX;
+				MEM_control_EXMEM <= MEM_control_IDEX;
+				WB_control_EXMEM <= WB_control_IDEX;
+			end
+		end
+		else begin
+			// go
+			regout1_EXMEM <= o_source_A_MUX;
+			regout2_EXMEM <= o_source_B_MUX;
+			aluout_EXMEM <= o_alu;
+			write_dest_EXMEM <= write_dest_IDEX;
+			PC_EXMEM <= PC_IDEX;
+			MEM_control_EXMEM <= MEM_control_IDEX;
+			WB_control_EXMEM <= WB_control_IDEX;
+		end
 	end
 
 
 	// MEM
-	assign read_m2 = MEM_control_EXMEM[1];
-	assign address2 = aluout_EXMEM;
-	assign data2 = MEM_control_EXMEM[1] ? 16'bz : regout2_EXMEM;
-	assign write_m2 = MEM_control_EXMEM[0];
-
 	always @(posedge clk) begin
 		// updating MEMWB registers
-		regout1_MEMWB <= regout1_EXMEM;
-		aluout_MEMWB <= aluout_EXMEM;
-		data_MEMWB <= data2;
-		write_dest_MEMWB <= write_dest_EXMEM;
-		PC_MEMWB <= PC_EXMEM;
-		WB_control_MEMWB <= WB_control_EXMEM;
+		if(MEM_control_EXMEM[1]) begin
+			if(data_cache_busy) begin
+				regout1_MEMWB <= regout1_MEMWB;
+				aluout_MEMWB <= aluout_MEMWB;
+				data_MEMWB <= data_MEMWB;
+				write_dest_MEMWB <= write_dest_MEMWB;
+				PC_MEMWB <= PC_MEMWB;
+				WB_control_MEMWB <= WB_control_MEMWB;
+				// end
+			end
+			else begin
+				if(data_cache_hit) begin
+					// go
+					regout1_MEMWB <= regout1_EXMEM;
+					aluout_MEMWB <= aluout_EXMEM;
+					data_MEMWB <= data_cache_outdata;
+					write_dest_MEMWB <= write_dest_EXMEM;
+					PC_MEMWB <= PC_EXMEM;
+					WB_control_MEMWB <= WB_control_EXMEM;
+				end
+				else begin
+					// stall
+					regout1_MEMWB <= regout1_MEMWB;
+					aluout_MEMWB <= aluout_MEMWB;
+					data_MEMWB <= data_MEMWB;
+					write_dest_MEMWB <= write_dest_MEMWB;
+					PC_MEMWB <= PC_MEMWB;
+					WB_control_MEMWB <= WB_control_MEMWB;
+				end
+			end
+		end
+		else if(MEM_control_EXMEM[0]) begin
+			if(data_cache_busy) begin
+			// 	if(data_cache_hit) begin
+			// 		// go
+			// 		regout1_MEMWB <= regout1_EXMEM;
+			// 		aluout_MEMWB <= aluout_EXMEM;
+			// 		data_MEMWB <= data_cache_outdata;
+			// 		write_dest_MEMWB <= write_dest_EXMEM;
+			// 		PC_MEMWB <= PC_EXMEM;
+			// 		WB_control_MEMWB <= WB_control_EXMEM;
+			// 	end
+				// else begin
+					// stall
+					regout1_MEMWB <= regout1_MEMWB;
+					aluout_MEMWB <= aluout_MEMWB;
+					data_MEMWB <= data_MEMWB;
+					write_dest_MEMWB <= write_dest_MEMWB;
+					PC_MEMWB <= PC_MEMWB;
+					WB_control_MEMWB <= WB_control_MEMWB;
+				// end
+			end
+			else begin
+				// go
+				regout1_MEMWB <= regout1_EXMEM;
+				aluout_MEMWB <= aluout_EXMEM;
+				data_MEMWB <= data_cache_outdata;
+				write_dest_MEMWB <= write_dest_EXMEM;
+				PC_MEMWB <= PC_EXMEM;
+				WB_control_MEMWB <= WB_control_EXMEM;
+			end
+		end
+		else begin
+			// go
+			regout1_MEMWB <= regout1_EXMEM;
+			aluout_MEMWB <= aluout_EXMEM;
+			data_MEMWB <= data2;
+			write_dest_MEMWB <= write_dest_EXMEM;
+			PC_MEMWB <= PC_EXMEM;
+			WB_control_MEMWB <= WB_control_EXMEM;
+		end
 	end
 
 	
@@ -435,7 +792,48 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	always @(posedge clk) begin
 		if(WB_control_MEMWB[4]) begin
-			instruction_count <= instruction_count + 1;
+			if(MEM_control_EXMEM[1]) begin
+				if(data_cache_busy) begin
+					// if(data_cache_hit) begin
+					// 	// go
+					// 	instruction_count <= instruction_count + 1;
+					// end
+					// else begin
+						// stall
+						instruction_count <= instruction_count;
+					// end
+				end
+				else begin
+					if(data_cache_hit) begin
+						// go
+						instruction_count <= instruction_count + 1;
+					end
+					else begin
+						// stall
+						instruction_count <= instruction_count;
+					end
+				end
+			end
+			else if(MEM_control_EXMEM[0]) begin
+				if(data_cache_busy) begin
+					// if(data_cache_hit) begin
+					// 	// go
+					// 	instruction_count <= instruction_count + 1;
+					// end
+					// else begin
+						// stall
+						instruction_count <= instruction_count;
+					// end
+				end
+				else begin
+					// go
+					instruction_count <= instruction_count + 1;
+				end
+			end
+			else begin
+				// go
+				instruction_count <= instruction_count + 1;
+			end
 		end
 		else begin
 			instruction_count <= instruction_count;
@@ -460,15 +858,56 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.read(!halt & !(o_hazard_detection_unit | controls[14]) & reset_n),
 		.clk(clk),
 		.flush(EX_control_IDEX[6] | wrong_prediction),
+		.d_cache_busy(data_cache_busy),
 		.address(address1),
-		.o_data(o_cache_data),
+		.o_data(instruction_cache_data),
 		.hit(i_cache_hit),
 		.read_m1(read_m1)
 	);
 
+	data_cache d_cache(
+		.reset_n(reset_n),
+		.clk(clk),
+		.input_address(aluout_EXMEM),
+		.read_signal(MEM_control_EXMEM[1]),
+		.write_signal(MEM_control_EXMEM[0]),
+		.instruction_count(num_inst),
+		.hit(data_cache_hit),
+		.busy(data_cache_busy),
+		.data_cpu_in(regout2_EXMEM),
+		.data_cpu_out(data_cache_outdata),
+		.output_address(address2),
+		.data_mem(data2),
+		.read_m2(read_m2),
+		.write_m2(write_m2),
+		.o_state(o_state),
+		.internal_addr(o_cache_addr),
+		.o_set0_way0_data_0(o_set0_way0_data_0),
+		.o_set0_way1_data_0(o_set0_way1_data_0),
+		.o_set1_way0_data_0(o_set1_way0_data_0),
+		.o_set1_way1_data_0(o_set1_way1_data_0),
+		.o_set0_way0_data_1(o_set0_way0_data_1),
+		.o_set0_way1_data_1(o_set0_way1_data_1),
+		.o_set1_way0_data_1(o_set1_way0_data_1),
+		.o_set1_way1_data_1(o_set1_way1_data_1),
+		.o_set0_way0_data_2(o_set0_way0_data_2),
+		.o_set0_way1_data_2(o_set0_way1_data_2),
+		.o_set1_way0_data_2(o_set1_way0_data_2),
+		.o_set1_way1_data_2(o_set1_way1_data_2),
+		.o_set0_way0_data_3(o_set0_way0_data_3),
+		.o_set0_way1_data_3(o_set0_way1_data_3),
+		.o_set1_way0_data_3(o_set1_way0_data_3),
+		.o_set1_way1_data_3(o_set1_way1_data_3)
+	);
+
 	// assigning test outputs
 	assign o_PC = PC;
-
+	assign o_input_address = aluout_EXMEM;
+	assign o_read_signal = MEM_control_EXMEM[1];
+	assign o_hit = data_cache_hit;
+	assign o_data_cpu_in = regout2_EXMEM;
+	assign o_data_cpu_out = data_cache_outdata;
+	assign o_instruction_IFID = instruction_IFID;
 
 endmodule
 
