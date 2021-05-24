@@ -2,7 +2,7 @@
 
 
 module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush, input d_cache_busy,
- output [15:0] address, output reg [15:0] o_data, output hit, output read_m1);
+ output [15:0] address, output reg [15:0] o_data, output hit, output read_m1, output [15:0] hit_count, output [15:0] miss_count);
     
 	reg [2:0] state;
 	reg [15:0] address1;
@@ -38,6 +38,9 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     assign offset = i_address[1:0];
     assign index = i_address[2];
     assign tag = i_address[15:3];
+
+    reg [15:0] hit_c;
+    reg [15:0] miss_c;
     
     reg complete;
     reg read1;
@@ -45,6 +48,8 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 
     initial begin // reset
         state = 2'b00;
+        hit_c = 0;
+        miss_c = 0;
         set0_way0_valid = 0;
         set0_way1_valid = 0;
         set1_way0_valid = 0;
@@ -58,6 +63,8 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     always @(*) begin // reset
         if(!reset_n) begin
             state = 2'b00;
+            hit_c = 0;
+            miss_c = 0;
             set0_way0_valid = 0;
             set0_way1_valid = 0;
             set1_way0_valid = 0;
@@ -315,24 +322,36 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 	assign address = address1; 
 
 
+    assign hit_count = hit_c;
+    assign miss_count = miss_c;
 
-
-
-
-
-
+    always @(posedge clk) begin
+        if(state == 0) begin
+            if(read) begin
+                if(temp_hit) begin
+                    hit_c <= hit_c + 1;
+                end
+                else begin
+                    miss_c <= miss_c + 1;
+                end
+            end
+            else begin
+                hit_c <= hit_c;
+                miss_c <= miss_c;
+            end
+        end
+        else begin
+            hit_c <= hit_c;
+            miss_c <= miss_c;
+        end
+    end
 endmodule
 
 
 
 module data_cache (input reset_n, input clk, input [15:0] input_address, input read_signal, input write_signal, input [15:0] instruction_count,
-output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2
-, output [3:0] o_state, output [15:0] internal_addr
-, output [15:0] o_set0_way0_data_0, output [15:0] o_set0_way1_data_0, output [15:0] o_set1_way0_data_0, output [15:0] o_set1_way1_data_0
-, output [15:0] o_set0_way0_data_1, output [15:0] o_set0_way1_data_1, output [15:0] o_set1_way0_data_1, output [15:0] o_set1_way1_data_1
-, output [15:0] o_set0_way0_data_2, output [15:0] o_set0_way1_data_2, output [15:0] o_set1_way0_data_2, output [15:0] o_set1_way1_data_2
-, output [15:0] o_set0_way0_data_3, output [15:0] o_set0_way1_data_3, output [15:0] o_set1_way0_data_3, output [15:0] o_set1_way1_data_3
-);
+output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2,
+output [15:0] hit_count, output [15:0] miss_count);
     
     reg [3:0] state;
     reg [15:0] data;
@@ -370,9 +389,14 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
 
     assign input_addr = state == 0 ? input_address : input_addr;
 
+    reg [15:0] hit_c;
+    reg [15:0] miss_c;
+
     // initialize
     initial begin
         state = 4'b0000;
+        hit_c = 0;
+        miss_c = 0;
         set0_way0_valid = 0;
         set0_way1_valid = 0;
         set1_way0_valid = 0;
@@ -388,6 +412,8 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
     always @(*) begin
         if(!reset_n) begin
             state = 4'b0000;
+            hit_c = 0;
+            miss_c = 0;
             set0_way0_valid = 0;
             set0_way1_valid = 0;
             set1_way0_valid = 0;
@@ -418,8 +444,6 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
         : data; // miss
 
     assign hit = is_hit;
-
-    // assign address = (state == 4'b0000) & (read_signal | write_signal) ? input_addr : address;
 
     wire [15:0] block0;
     wire [15:0] block1;
@@ -501,8 +525,6 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
                     end
                     else begin
                         state <= 4'b1001;
-
-
                     end
                 end
 
@@ -667,28 +689,31 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
     assign write_m2 = write2;
     assign data_mem = write2 ? write_data : 16'bz;
 
-    // for test
-    assign o_state = state;
-    assign o_set0_way0_data_0 = set0_way0_data[0];
-    assign o_set0_way1_data_0 = set0_way1_data[0];
-    assign o_set1_way0_data_0 = set1_way0_data[0];
-    assign o_set1_way1_data_0 = set1_way1_data[0];
 
-    assign o_set0_way0_data_1 = set0_way0_data[1];
-    assign o_set0_way1_data_1 = set0_way1_data[1];
-    assign o_set1_way0_data_1 = set1_way0_data[1];
-    assign o_set1_way1_data_1 = set1_way1_data[1];
+    
+    assign hit_count = hit_c;
+    assign miss_count = miss_c;
 
-    assign o_set0_way0_data_2 = set0_way0_data[2];
-    assign o_set0_way1_data_2 = set0_way1_data[2];
-    assign o_set1_way0_data_2 = set1_way0_data[2];
-    assign o_set1_way1_data_2 = set1_way1_data[2];
+    always @(posedge clk) begin
+        if(state == 0) begin
+            if(read_signal | write_signal) begin     
+                if(is_hit) begin
+                    hit_c <= hit_c + 1;
+                end
+                else begin
+                    miss_c <= miss_c + 1;
+                end
+            end
+            else begin
+                hit_c <= hit_c;
+                miss_c <= miss_c;
+            end
+        end
+        else begin
+            hit_c <= hit_c;
+            miss_c <= miss_c;
+        end
+    end
 
-    assign o_set0_way0_data_3 = set0_way0_data[3];
-    assign o_set0_way1_data_3 = set0_way1_data[3];
-    assign o_set1_way0_data_3 = set1_way0_data[3];
-    assign o_set1_way1_data_3 = set1_way1_data[3];
-
-    assign internal_addr = input_addr;
 
 endmodule

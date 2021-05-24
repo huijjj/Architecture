@@ -5,7 +5,7 @@
 `define NUM_TEST 56
 `define TESTID_SIZE 5
 
-module cpu_TB();
+module cpu_baseline_TB();
 	reg reset_n;    // active-low RESET signal
 	reg clk;        // clock signal	
 	
@@ -22,15 +22,8 @@ module cpu_TB();
 	wire [`WORD_SIZE-1:0] output_port;	// this will be used for a "WWD" instruction
 	wire is_halted;				// set if the cpu is halted
 
-	wire [15:0] i_hit;
-	wire [15:0] i_miss;
-	wire [15:0]	d_hit;
-	wire [15:0] d_miss;
-
-
 	// instantiate the unit under test
-	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
-	i_hit, i_miss, d_hit, d_miss);
+	cpu_baseline UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
 
 	// initialize inputs
