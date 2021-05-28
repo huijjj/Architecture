@@ -2,7 +2,7 @@
 
 
 module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush, input d_cache_busy,
- output [15:0] address, output reg [15:0] o_data, output hit, output read_m1, output [15:0] hit_count, output [15:0] miss_count);
+ output [15:0] address, output reg [15:0] o_data, output hit, output read_m1);
     
 	reg [2:0] state;
 	reg [15:0] address1;
@@ -39,8 +39,6 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     assign index = i_address[2];
     assign tag = i_address[15:3];
 
-    reg [15:0] hit_c;
-    reg [15:0] miss_c;
     
     reg complete;
     reg read1;
@@ -48,8 +46,6 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
 
     initial begin // reset
         state = 2'b00;
-        hit_c = 0;
-        miss_c = 0;
         set0_way0_valid = 0;
         set0_way1_valid = 0;
         set1_way0_valid = 0;
@@ -63,8 +59,6 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     always @(*) begin // reset
         if(!reset_n) begin
             state = 2'b00;
-            hit_c = 0;
-            miss_c = 0;
             set0_way0_valid = 0;
             set0_way1_valid = 0;
             set1_way0_valid = 0;
@@ -690,30 +684,6 @@ output [15:0] hit_count, output [15:0] miss_count);
     assign data_mem = write2 ? write_data : 16'bz;
 
 
-    
-    assign hit_count = hit_c;
-    assign miss_count = miss_c;
-
-    always @(posedge clk) begin
-        if(state == 0) begin
-            if(read_signal | write_signal) begin     
-                if(is_hit) begin
-                    hit_c <= hit_c + 1;
-                end
-                else begin
-                    miss_c <= miss_c + 1;
-                end
-            end
-            else begin
-                hit_c <= hit_c;
-                miss_c <= miss_c;
-            end
-        end
-        else begin
-            hit_c <= hit_c;
-            miss_c <= miss_c;
-        end
-    end
 
 
 endmodule
