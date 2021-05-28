@@ -10,8 +10,8 @@
 `include "cache.v"
 
 
-module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted
-, i_hit, i_miss, d_hit, d_miss);
+module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
+dma_interrupt, external_interrupt, dma_BR, dma_BG);
 
 	input clk;
 	input reset_n;
@@ -29,12 +29,15 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	output reg [`WORD_SIZE-1:0] output_port;
 	output is_halted;
 
-	output [15:0] i_hit;
-	output [15:0] i_miss;
-	output [15:0] d_hit;
-	output [15:0] d_miss;
+	input dma_interrupt;
+	input external_interrupt;
+	input dma_BR;
+	
+	output dma_BG;
 
-
+	// dma register
+	reg bus_granted;
+	assign dma_BG = bus_granted;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -42,12 +45,6 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	reg halt;
 	reg [`WORD_SIZE-1:0] output_port_reg;
 	wire i_cache_hit;
-
-	wire [15:0] i_hit_count;
-	wire [15:0] i_miss_count;
-	wire [15:0] d_hit_count;
-	wire [15:0] d_miss_count;
-
 
 	// IF/ID registers
 	reg [`WORD_SIZE-1:0] instruction_IFID;
@@ -97,6 +94,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	wire [15:0] data_cache_outdata;
 
 	initial begin
+		bus_granted = 0;
 		output_port_reg = 0;
 		PC = 0;
 		instruction_count = 0;
@@ -135,6 +133,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	always @(*) begin
 		if(!reset_n) begin
+			bus_granted = 0;
 			output_port_reg = 0;
 			PC = 0;
 			instruction_count = 0;
@@ -173,8 +172,23 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	end
 	
 
+
 	// for cache connection
 	wire [15:0] instruction_cache_data;
+
+	always @(posedge clk) begin
+		if(dma_BR) begin
+			if((MEM_control_EXMEM[0] | MEM_control_EXMEM[1]) & (bus_granted == 0)) begin
+				bus_granted <= 0;
+			end
+			else begin
+				bus_granted <= 1;
+			end
+		end
+		else begin
+			bus_granted <= 0;
+		end
+	end
 
 
 	// IF
@@ -211,8 +225,6 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	wire o_hazard_detection_unit;
 	wire [17:0] o_control_unit;
 	wire [17:0] controls;
-
-	
 
 	always @(posedge clk) begin
 		// PC update
@@ -803,6 +815,8 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	assign num_inst = instruction_count;
 
+	wire write1;
+
 
 	// instruction cache
 	insturction_cache i_cache(
@@ -814,12 +828,11 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.clk(clk),
 		.flush(EX_control_IDEX[6] | wrong_prediction),
 		.d_cache_busy(data_cache_busy),
+		.BG(bus_granted),
 		.address(address1),
 		.o_data(instruction_cache_data),
 		.hit(i_cache_hit),
-		.read_m1(read_m1),
-		.hit_count(i_hit_count),
-		.miss_count(i_miss_count)
+		.read_m1(read_m1)
 	);
 
 	data_cache d_cache(
@@ -829,6 +842,7 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.read_signal(MEM_control_EXMEM[1]),
 		.write_signal(MEM_control_EXMEM[0]),
 		.instruction_count(num_inst),
+		.BG(bus_granted),
 		.hit(data_cache_hit),
 		.busy(data_cache_busy),
 		.data_cpu_in(regout2_EXMEM),
@@ -836,15 +850,9 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 		.output_address(address2),
 		.data_mem(data2),
 		.read_m2(read_m2),
-		.write_m2(write_m2),
-		.hit_count(d_hit_count),
-		.miss_count(d_miss_count)
+		.write_m2(write1)
 	);
 
-	assign i_hit = i_hit_count;
-	assign i_miss = i_miss_count;
-	assign d_hit = d_hit_count;
-	assign d_miss = d_miss_count;
-
+	assign write_m2 = bus_granted ? 1 : write1;
 
 endmodule

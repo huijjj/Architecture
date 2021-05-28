@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
 
 
-module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush, input d_cache_busy,
+module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush, input d_cache_busy, input BG,
  output [15:0] address, output reg [15:0] o_data, output hit, output read_m1);
     
 	reg [2:0] state;
@@ -38,7 +38,6 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     assign offset = i_address[1:0];
     assign index = i_address[2];
     assign tag = i_address[15:3];
-
     
     reg complete;
     reg read1;
@@ -130,7 +129,12 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
                             state <= 3'b000;
                         end
                         else begin
-                            state <= 3'b001;
+                            if(BG) begin
+                                state <= 3'b000;
+                            end
+                            else begin
+                                state <= 3'b001;
+                            end
                         end
                     end
                 end
@@ -314,38 +318,10 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
     end
 
 	assign address = address1; 
-
-
-    assign hit_count = hit_c;
-    assign miss_count = miss_c;
-
-    always @(posedge clk) begin
-        if(state == 0) begin
-            if(read) begin
-                if(temp_hit) begin
-                    hit_c <= hit_c + 1;
-                end
-                else begin
-                    miss_c <= miss_c + 1;
-                end
-            end
-            else begin
-                hit_c <= hit_c;
-                miss_c <= miss_c;
-            end
-        end
-        else begin
-            hit_c <= hit_c;
-            miss_c <= miss_c;
-        end
-    end
 endmodule
 
-
-
-module data_cache (input reset_n, input clk, input [15:0] input_address, input read_signal, input write_signal, input [15:0] instruction_count,
-output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2,
-output [15:0] hit_count, output [15:0] miss_count);
+module data_cache (input reset_n, input clk, input [15:0] input_address, input read_signal, input write_signal, input [15:0] instruction_count, input BG,
+output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2);
     
     reg [3:0] state;
     reg [15:0] data;
@@ -383,14 +359,9 @@ output [15:0] hit_count, output [15:0] miss_count);
 
     assign input_addr = state == 0 ? input_address : input_addr;
 
-    reg [15:0] hit_c;
-    reg [15:0] miss_c;
-
     // initialize
     initial begin
         state = 4'b0000;
-        hit_c = 0;
-        miss_c = 0;
         set0_way0_valid = 0;
         set0_way1_valid = 0;
         set1_way0_valid = 0;
@@ -406,8 +377,6 @@ output [15:0] hit_count, output [15:0] miss_count);
     always @(*) begin
         if(!reset_n) begin
             state = 4'b0000;
-            hit_c = 0;
-            miss_c = 0;
             set0_way0_valid = 0;
             set0_way1_valid = 0;
             set1_way0_valid = 0;
@@ -484,41 +453,52 @@ output [15:0] hit_count, output [15:0] miss_count);
                         end
                     end
                     else begin // read miss
-                        state <= 4'b0001;
-                        address <= block0;
-                        temp_tag <= tag;
-                        temp_last_access <= instruction_count;
-                        read2 <= 1;
+                        if(BG) begin
+                            state <= 4'b0000;
+                            read2 <= 0;
+                        end
+                        else begin
+                            state <= 4'b0001;
+                            address <= block0;
+                            temp_tag <= tag;
+                            temp_last_access <= instruction_count;
+                            read2 <= 1;
+                        end
 
                     end
                 end
 
                 else if(write_signal) begin
-                    if(is_hit) begin
-                        if(index == 0) begin // index 0
-                            if((tag == set0_way0_tag) && set0_way0_valid) begin
-                                set0_way0_data[offset] <= data_cpu_in;
-                                set0_way0_last_access <= instruction_count;
-                            end
-                            else begin
-                                set0_way1_data[offset] <= data_cpu_in;
-                                set0_way1_last_access <= instruction_count;
-                            end
-                        end
-                        else begin // index 1
-                             if((tag == set1_way0_tag) && set1_way0_valid) begin
-                                set1_way0_data[offset] <= data_cpu_in;
-                                set1_way0_last_access <= instruction_count;
-                            end
-                            else begin
-                                set1_way1_data[offset] <= data_cpu_in;
-                                set1_way1_last_access <= instruction_count;
-                            end
-                        end
-                        state <= 4'b1001;
+                    if(BG) begin
+                        state <= 4'b0000;
                     end
                     else begin
-                        state <= 4'b1001;
+                        if(is_hit) begin
+                            if(index == 0) begin // index 0
+                                if((tag == set0_way0_tag) && set0_way0_valid) begin
+                                    set0_way0_data[offset] <= data_cpu_in;
+                                    set0_way0_last_access <= instruction_count;
+                                end
+                                else begin
+                                    set0_way1_data[offset] <= data_cpu_in;
+                                    set0_way1_last_access <= instruction_count;
+                                end
+                            end
+                            else begin // index 1
+                                if((tag == set1_way0_tag) && set1_way0_valid) begin
+                                    set1_way0_data[offset] <= data_cpu_in;
+                                    set1_way0_last_access <= instruction_count;
+                                end
+                                else begin
+                                    set1_way1_data[offset] <= data_cpu_in;
+                                    set1_way1_last_access <= instruction_count;
+                                end
+                            end
+                            state <= 4'b1001;
+                        end
+                        else begin
+                            state <= 4'b1001;
+                        end
                     end
                 end
 
@@ -682,8 +662,4 @@ output [15:0] hit_count, output [15:0] miss_count);
     assign read_m2 = read2;
     assign write_m2 = write2;
     assign data_mem = write2 ? write_data : 16'bz;
-
-
-
-
 endmodule
