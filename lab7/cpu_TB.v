@@ -23,12 +23,39 @@ module cpu_TB();
 	wire is_halted;				// set if the cpu is halted
 
 
+	wire dma_interrupt;
+	wire ed_interrupt;
+	wire [3:0] idx;
+	wire use_bus;
+	wire bus_request;
+	wire bus_granted;
+	wire dma_start;
+	wire [3:0] length;
+	wire [15:0] temp_address2;
+	wire [15:0] o_address;
+
+	wire [15:0] dma_test_0;
+	wire [15:0] dma_test_1;
+	wire [15:0] dma_test_2;
+	wire [15:0] dma_test_3;
+	wire [15:0] dma_test_4;
+	wire [15:0] dma_test_5;
+	wire [15:0] dma_test_6;
+	wire [15:0] dma_test_7;
+	wire [15:0] dma_test_8;
+	wire [15:0] dma_test_9;
+	wire [15:0] dma_test_10;
+	wire [15:0] dma_test_11;
 	// instantiate the unit under test
-	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
-	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
-	(clk, startdma, length, address, o_address, data, BG, BR, use_bus, idx, interrupt);
-	DMA_controller DMAC(clk, );
-	external_device ED();
+	cpu UUT(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, temp_address2, data2, num_inst, output_port, is_halted,
+	dma_interrupt, ed_interrupt, bus_request, bus_granted, dma_start, length);
+	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2,
+	 dma_test_0, dma_test_1, dma_test_2, dma_test_3, dma_test_4, dma_test_5, dma_test_6, dma_test_7, dma_test_8, dma_test_9, dma_test_10, dma_test_11);
+	// (clk, startdma, length, address, o_address, BG, BR, use_bus, idx, interrupt)
+	DMA_controller DMAC(clk, dma_start, length, temp_address2, o_address, bus_granted, bus_request, use_bus, idx, dma_interrupt);
+	external_device ED(clk, reset_n, idx, ed_interrupt, data2);
+
+	assign address2 = bus_granted ? o_address : temp_address2;
 
 	// initialize inputs
 	initial begin

@@ -11,7 +11,7 @@
 
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
-dma_interrupt, external_interrupt, dma_BR, dma_BG);
+dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length);
 
 	input clk;
 	input reset_n;
@@ -20,7 +20,7 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 	output [`WORD_SIZE-1:0] address1;
 	output read_m2;
 	output write_m2;
-	output [`WORD_SIZE-1:0] address2;
+	output reg [`WORD_SIZE-1:0] address2;
 
 	input [`WORD_SIZE-1:0] data1;
 	inout [`WORD_SIZE-1:0] data2;
@@ -32,12 +32,18 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 	input dma_interrupt;
 	input external_interrupt;
 	input dma_BR;
-	
 	output dma_BG;
+	output dma_start;
+	output [3:0] dma_length;
 
 	// dma register
+	reg reg_dma_start;
+	reg [3:0] reg_dma_length;
 	reg bus_granted;
+
 	assign dma_BG = bus_granted;
+	assign dma_start = reg_dma_start;
+	assign dma_length = reg_dma_length;
 
 	// internal values
 	reg [`WORD_SIZE-1:0] PC;
@@ -94,6 +100,8 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 	wire [15:0] data_cache_outdata;
 
 	initial begin
+		dma_start = 0;
+		length = 0;
 		bus_granted = 0;
 		output_port_reg = 0;
 		PC = 0;
@@ -133,6 +141,8 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 
 	always @(*) begin
 		if(!reset_n) begin
+			dma_start = 0;
+			length = 0;
 			bus_granted = 0;
 			output_port_reg = 0;
 			PC = 0;
@@ -176,6 +186,7 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 	// for cache connection
 	wire [15:0] instruction_cache_data;
 
+	// DMA
 	always @(posedge clk) begin
 		if(dma_BR) begin
 			if((MEM_control_EXMEM[0] | MEM_control_EXMEM[1]) & (bus_granted == 0)) begin
@@ -187,6 +198,22 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 		end
 		else begin
 			bus_granted <= 0;
+		end
+	end
+
+	always @(posedge clk) begin
+		if(external_interrupt == 1) begin
+			reg_dma_start <= 1;
+			address2 <= 16'h17;
+			reg_dma_length <= 4'b1100;
+		end
+		else begin
+		end
+		
+		if(dma_interrupt == 1) begin
+			reg_dma_start <= 0;
+		end
+		else begin
 		end
 	end
 
@@ -815,8 +842,7 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 
 	assign num_inst = instruction_count;
 
-	wire write1;
-
+	wire write2;
 
 	// instruction cache
 	insturction_cache i_cache(
@@ -850,9 +876,9 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG);
 		.output_address(address2),
 		.data_mem(data2),
 		.read_m2(read_m2),
-		.write_m2(write1)
+		.write_m2(write2)
 	);
 
-	assign write_m2 = bus_granted ? 1 : write1;
+	assign write_m2 = bus_granted ? 1 : write2;
 
 endmodule

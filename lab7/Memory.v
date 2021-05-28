@@ -4,7 +4,9 @@
 `define WORD_SIZE 16	//	instead of 2^16 words to reduce memory
 			//	requirements in the Active-HDL simulator 
 
-module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
+module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2,
+	 dma_test_0, dma_test_1, dma_test_2, dma_test_3, dma_test_4, dma_test_5, dma_test_6, dma_test_7, dma_test_8, dma_test_9, dma_test_10, dma_test_11);
+
 	input clk;
 	wire clk;
 	input reset_n;
@@ -26,6 +28,34 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	inout data2;
 	wire [`WORD_SIZE-1:0] data2;
 	
+	output [15:0] dma_test_0;
+	output [15:0] dma_test_1;
+	output [15:0] dma_test_2;
+	output [15:0] dma_test_3;
+	output [15:0] dma_test_4;
+	output [15:0] dma_test_5;
+	output [15:0] dma_test_6;
+	output [15:0] dma_test_7;
+	output [15:0] dma_test_8;
+	output [15:0] dma_test_9;
+	output [15:0] dma_test_10;
+	output [15:0] dma_test_11;
+
+
+	assign dma_test_0 = memory[16'h17];
+	assign dma_test_1 = memory[16'h18];
+	assign dma_test_2 = memory[16'h19];
+	assign dma_test_3 = memory[16'h1a];
+	assign dma_test_4 = memory[16'h1b];
+	assign dma_test_5 = memory[16'h1c];
+	assign dma_test_6 = memory[16'h1d];
+	assign dma_test_7 = memory[16'h1e];
+	assign dma_test_8 = memory[16'h1f];
+	assign dma_test_9 = memory[16'h20];
+	assign dma_test_10 = memory[16'h21];
+	assign dma_test_11 = memory[16'h22];
+
+
 	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
 	reg [`WORD_SIZE-1:0] output_data2;
 	

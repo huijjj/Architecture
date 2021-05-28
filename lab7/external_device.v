@@ -7,7 +7,7 @@ module external_device (clk, reset_n, idx
 
 	input clk;
 	input reset_n;
-	input [5:0] idx;
+	input [3:0] idx;
 	input use_bus;
 
 	output reg interrupt;
