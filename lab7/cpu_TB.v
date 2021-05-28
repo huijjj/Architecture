@@ -26,6 +26,9 @@ module cpu_TB();
 	// instantiate the unit under test
 	cpu UUT (clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
+	(clk, startdma, length, address, o_address, data, BG, BR, use_bus, idx, interrupt);
+	DMA_controller DMAC(clk, );
+	external_device ED();
 
 	// initialize inputs
 	initial begin

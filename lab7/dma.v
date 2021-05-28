@@ -1,6 +1,6 @@
 `define WORD_SIZE 16
 
-module dma (clk, startdma, length, address, o_address, data, BG,
+module DMA_controller (clk, startdma, length, address, o_address, data, BG,
  BR, use_bus, idx, interrupt);
     input clk;
     input startdma;
