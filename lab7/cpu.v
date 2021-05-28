@@ -11,13 +11,7 @@
 
 
 module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted,
-dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length
-, o_IFID_instruction, o_d_cache_hit, o_i_cache_hit, o_x0, o_x1, o_x2, o_x3
-, o_set0_way0_data_0, o_set0_way1_data_0, o_set1_way0_data_0, o_set1_way1_data_0
-, o_set0_way0_data_1, o_set0_way1_data_1, o_set1_way0_data_1, o_set1_way1_data_1
-, o_set0_way0_data_2, o_set0_way1_data_2, o_set1_way0_data_2, o_set1_way1_data_2
-, o_set0_way0_data_3, o_set0_way1_data_3, o_set1_way0_data_3, o_set1_way1_data_3
-);
+dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length);
 
 	input clk;
 	input reset_n;
@@ -41,37 +35,6 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length
 	output dma_BG;
 	output dma_start;
 	output [3:0] dma_length;
-
-	// for test
-	output [15:0] o_IFID_instruction;
-	output [15:0] o_x0;
-	output [15:0] o_x1;
-	output [15:0] o_x2;
-	output [15:0] o_x3;
-	output o_d_cache_hit;
-	output o_i_cache_hit;
-
-
-	output [15:0] o_set0_way0_data_0;
-	output [15:0] o_set0_way1_data_0;
-	output [15:0] o_set1_way0_data_0;
-	output [15:0] o_set1_way1_data_0;
-	output [15:0] o_set0_way0_data_1;
-	output [15:0] o_set0_way1_data_1;
-	output [15:0] o_set1_way0_data_1;
-	output [15:0] o_set1_way1_data_1;
-	output [15:0] o_set0_way0_data_2;
-	output [15:0] o_set0_way1_data_2;
-	output [15:0] o_set1_way0_data_2;
-	output [15:0] o_set1_way1_data_2;
-	output [15:0] o_set0_way0_data_3;
-	output [15:0] o_set0_way1_data_3;
-	output [15:0] o_set1_way0_data_3;
-	output [15:0] o_set1_way1_data_3;
-	
-
-
-
 
 	// dma register
 	reg reg_dma_start;
@@ -480,11 +443,7 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length
 		.reg_write(WB_control_MEMWB[5]),
 		.write_data(reg_write_data),
 		.read_out1(o_reg_out1),
-		.read_out2(o_reg_out2),
-		.o_x0(o_x0),
-		.o_x1(o_x1),
-		.o_x2(o_x2),
-		.o_x3(o_x3)
+		.read_out2(o_reg_out2)
 	);
 
 	hazard_detect hazard_detection_unit(
@@ -928,30 +887,10 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length
 		.output_address(d_address2),
 		.data_mem(data2),
 		.read_m2(read_m2),
-		.write_m2(write2),
-		.o_set0_way0_data_0(o_set0_way0_data_0),
-		.o_set0_way0_data_1(o_set0_way0_data_1),
-		.o_set0_way0_data_2(o_set0_way0_data_2),
-		.o_set0_way0_data_3(o_set0_way0_data_3),
-		.o_set0_way1_data_0(o_set0_way1_data_0),
-		.o_set0_way1_data_1(o_set0_way1_data_1),
-		.o_set0_way1_data_2(o_set0_way1_data_2),
-		.o_set0_way1_data_3(o_set0_way1_data_3),
-		.o_set1_way0_data_0(o_set1_way0_data_0),
-		.o_set1_way0_data_1(o_set1_way0_data_1),
-		.o_set1_way0_data_2(o_set1_way0_data_2),
-		.o_set1_way0_data_3(o_set1_way0_data_3),
-		.o_set1_way1_data_0(o_set1_way1_data_0),
-		.o_set1_way1_data_1(o_set1_way1_data_1),
-		.o_set1_way1_data_2(o_set1_way1_data_2),
-		.o_set1_way1_data_3(o_set1_way1_data_3)
+		.write_m2(write2)
 	);
 
 	assign write_m2 = dma_BR ? 1 : write2;
 
-	// for test
-	assign o_IFID_instruction = instruction_IFID;
-	assign o_d_cache_hit = data_cache_hit;
-	assign o_i_cache_hit = i_cache_hit;
 
 endmodule

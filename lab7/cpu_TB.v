@@ -21,16 +21,6 @@ module cpu_TB();
 	wire [`WORD_SIZE-1:0] num_inst;		// number of instruction during execution
 	wire [`WORD_SIZE-1:0] output_port;	// this will be used for a "WWD" instruction
 	wire is_halted;				// set if the cpu is halted
-
-	///// for test /////
-	
-	wire [15:0] IFID_instruction;
-	wire [15:0] x0;
-	wire [15:0] x1;
-	wire [15:0] x2;
-	wire [15:0] x3;
-	wire d_cache_hit;
-	wire i_cache_hit;
 	
 	///////////////////
 
@@ -59,36 +49,10 @@ module cpu_TB();
 	wire [15:0] dma_test_11;
 
 
-	wire [15:0] o_set0_way0_data_0;
-	wire [15:0] o_set0_way0_data_1;
-	wire [15:0] o_set0_way0_data_2;
-	wire [15:0] o_set0_way0_data_3;
-	wire [15:0] o_set0_way1_data_0;
-	wire [15:0] o_set0_way1_data_1;
-	wire [15:0] o_set0_way1_data_2;
-	wire [15:0] o_set0_way1_data_3;
-	wire [15:0] o_set1_way0_data_0;
-	wire [15:0] o_set1_way0_data_1;
-	wire [15:0] o_set1_way0_data_2;
-	wire [15:0] o_set1_way0_data_3;
-	wire [15:0] o_set1_way1_data_0;
-	wire [15:0] o_set1_way1_data_1;
-	wire [15:0] o_set1_way1_data_2;
-	wire [15:0] o_set1_way1_data_3;
-
-
 
 	// instantiate the unit under test
-	cpu UUT(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, temp_address2, data2, num_inst, output_port, is_halted,
-	dma_interrupt, ed_interrupt, bus_request, bus_granted, dma_start, length
-	, IFID_instruction, d_cache_hit, i_cache_hit, x0, x1, x2, x3,
-	o_set0_way0_data_0, o_set0_way1_data_0, o_set1_way0_data_0, o_set1_way1_data_0,
-	o_set0_way0_data_1, o_set0_way1_data_1, o_set1_way0_data_1, o_set1_way1_data_1,
-	o_set0_way0_data_2, o_set0_way1_data_2, o_set1_way0_data_2, o_set1_way1_data_2,
-	o_set0_way0_data_3, o_set0_way1_data_3, o_set1_way0_data_3, o_set1_way1_data_3
-	);
-	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2,
-	 dma_test_0, dma_test_1, dma_test_2, dma_test_3, dma_test_4, dma_test_5, dma_test_6, dma_test_7, dma_test_8, dma_test_9, dma_test_10, dma_test_11);
+	cpu UUT(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, temp_address2, data2, num_inst, output_port, is_halted, dma_interrupt, ed_interrupt, bus_request, bus_granted, dma_start, length);
+	Memory NUUT(!clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, dma_test_0, dma_test_1, dma_test_2, dma_test_3, dma_test_4, dma_test_5, dma_test_6, dma_test_7, dma_test_8, dma_test_9, dma_test_10, dma_test_11);
 	DMA_controller DMAC(clk, dma_start, length, temp_address2, o_address, bus_granted, bus_request, use_bus, idx, dma_interrupt);
 	external_device ED(clk, reset_n, idx, use_bus, ed_interrupt, data2);
 
