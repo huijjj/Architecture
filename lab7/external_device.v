@@ -2,8 +2,7 @@
 `define WORD_SIZE 16 
 
 // TODO: implement your external_device module
-module external_device (clk, reset_n, idx
- interrupt, o_data);
+module external_device (clk, reset_n, idx, use_bus, interrupt, o_data);
 
 	input clk;
 	input reset_n;
@@ -17,8 +16,16 @@ module external_device (clk, reset_n, idx
 	reg [`WORD_SIZE-1:0] num_clk; // num_clk to count cycles and trigger interrupt at appropriate cycle
 	reg [`WORD_SIZE-1:0] data [0:`WORD_SIZE-1]; // data to transfer
 
+	initial begin
+		interrupt = 0;
+	end
+
+
 
 	always @(*) begin
+		if(!reset_n) begin
+			interrupt = 0;
+		end
 		// TODO: implement your combinational logic
 		if(num_clk == 200) begin
 			interrupt = 1;

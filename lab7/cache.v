@@ -2,7 +2,7 @@
 
 
 module insturction_cache(input [15:0] i_address, input [15:0] i_data, input reset_n, input [15:0] instruction_count, input read, input clk, input flush, input d_cache_busy, input BG,
- output [15:0] address, output reg [15:0] o_data, output hit, output read_m1);
+ output [15:0] address, output reg [15:0] o_data, output hit, output read_m1, output busy);
     
 	reg [2:0] state;
 	reg [15:0] address1;
@@ -317,11 +317,16 @@ module insturction_cache(input [15:0] i_address, input [15:0] i_data, input rese
         endcase
     end
 
+    assign busy = state != 3'b000;
 	assign address = address1; 
 endmodule
 
 module data_cache (input reset_n, input clk, input [15:0] input_address, input read_signal, input write_signal, input [15:0] instruction_count, input BG,
-output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2);
+output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_out, output [15:0] output_address, inout reg [15:0] data_mem, output read_m2, output write_m2
+, output [15:0] o_set0_way0_data_0, output [15:0] o_set0_way1_data_0, output [15:0] o_set1_way0_data_0, output [15:0] o_set1_way1_data_0
+, output [15:0] o_set0_way0_data_1, output [15:0] o_set0_way1_data_1, output [15:0] o_set1_way0_data_1, output [15:0] o_set1_way1_data_1
+, output [15:0] o_set0_way0_data_2, output [15:0] o_set0_way1_data_2, output [15:0] o_set1_way0_data_2, output [15:0] o_set1_way1_data_2
+, output [15:0] o_set0_way0_data_3, output [15:0] o_set0_way1_data_3, output [15:0] o_set1_way0_data_3, output [15:0] o_set1_way1_data_3);
     
     reg [3:0] state;
     reg [15:0] data;
@@ -469,35 +474,42 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
                 end
 
                 else if(write_signal) begin
-                    if(BG) begin
-                        state <= 4'b0000;
-                    end
-                    else begin
-                        if(is_hit) begin
-                            if(index == 0) begin // index 0
-                                if((tag == set0_way0_tag) && set0_way0_valid) begin
-                                    set0_way0_data[offset] <= data_cpu_in;
-                                    set0_way0_last_access <= instruction_count;
-                                end
-                                else begin
-                                    set0_way1_data[offset] <= data_cpu_in;
-                                    set0_way1_last_access <= instruction_count;
-                                end
+                    
+                    if(is_hit) begin
+                        if(index == 0) begin // index 0
+                            if((tag == set0_way0_tag) && set0_way0_valid) begin
+                                set0_way0_data[offset] <= data_cpu_in;
+                                set0_way0_last_access <= instruction_count;
                             end
-                            else begin // index 1
-                                if((tag == set1_way0_tag) && set1_way0_valid) begin
-                                    set1_way0_data[offset] <= data_cpu_in;
-                                    set1_way0_last_access <= instruction_count;
-                                end
-                                else begin
-                                    set1_way1_data[offset] <= data_cpu_in;
-                                    set1_way1_last_access <= instruction_count;
-                                end
+                            else begin
+                                set0_way1_data[offset] <= data_cpu_in;
+                                set0_way1_last_access <= instruction_count;
                             end
-                            state <= 4'b1001;
+                        end
+                        else begin // index 1
+                            if((tag == set1_way0_tag) && set1_way0_valid) begin
+                                set1_way0_data[offset] <= data_cpu_in;
+                                set1_way0_last_access <= instruction_count;
+                            end
+                            else begin
+                                set1_way1_data[offset] <= data_cpu_in;
+                                set1_way1_last_access <= instruction_count;
+                            end
+                        end
+                        if(BG) begin
+                            state <= 4'b1111;
                         end
                         else begin
                             state <= 4'b1001;
+                        end
+                    end
+                    else begin
+                        if(BG) begin
+                            state <= 4'b1111;
+                        end 
+                        else begin
+                            state <= 4'b1001;
+                            
                         end
                     end
                 end
@@ -649,6 +661,17 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
                 complete <= 0;
                 state <= 4'b0000;
             end
+
+
+            4'b1111: begin
+                if(BG) begin
+                    state <= 4'b1111;
+                end 
+                else begin
+                    state <= 4'b1001;
+                end   
+            end
+
             default: begin
                 state <= 4'b0000;
                 write2 <= 0;
@@ -661,5 +684,28 @@ output hit, output busy, input [15:0] data_cpu_in, output reg [15:0] data_cpu_ou
     assign output_address = address;
     assign read_m2 = read2;
     assign write_m2 = write2;
-    assign data_mem = write2 ? write_data : 16'bz;
+    assign data_mem = BG ? 16'bz : write2 ? write_data : 16'bz;
+
+    // test
+    assign o_set0_way0_data_0 = set0_way0_data[0];
+    assign o_set0_way1_data_0 = set0_way1_data[0];
+    assign o_set1_way0_data_0 = set1_way0_data[0];
+    assign o_set1_way1_data_0 = set1_way1_data[0];
+
+    assign o_set0_way0_data_1 = set0_way0_data[1];
+    assign o_set0_way1_data_1 = set0_way1_data[1];
+    assign o_set1_way0_data_1 = set1_way0_data[1];
+    assign o_set1_way1_data_1 = set1_way1_data[1];
+
+    assign o_set0_way0_data_2 = set0_way0_data[2];
+    assign o_set0_way1_data_2 = set0_way1_data[2];
+    assign o_set1_way0_data_2 = set1_way0_data[2];
+    assign o_set1_way1_data_2 = set1_way1_data[2];
+
+    assign o_set0_way0_data_3 = set0_way0_data[3];
+    assign o_set0_way1_data_3 = set0_way1_data[3];
+    assign o_set1_way0_data_3 = set1_way0_data[3];
+    assign o_set1_way1_data_3 = set1_way1_data[3];
+
+
 endmodule

@@ -1,6 +1,8 @@
 `include "opcodes.v" 
 
-module register_file (read_out1, read_out2, read1, read2, dest, write_data, reg_write, clk, reset_n);
+module register_file (read_out1, read_out2, read1, read2, dest, write_data, reg_write, clk, reset_n
+, o_x0, o_x1, o_x2, o_x3
+);
 
 	input clk, reset_n;
 	input [1:0] read1;
@@ -13,6 +15,11 @@ module register_file (read_out1, read_out2, read1, read2, dest, write_data, reg_
 	output [`WORD_SIZE-1:0] read_out1;
 	output [`WORD_SIZE-1:0] read_out2;
 
+	// for test
+	output [15:0] o_x0;
+	output [15:0] o_x1;
+	output [15:0] o_x2;
+	output [15:0] o_x3;
 
 
 	
@@ -63,4 +70,10 @@ module register_file (read_out1, read_out2, read1, read2, dest, write_data, reg_
         	endcase 
     	end
    	end
+
+	// for test
+	assign o_x0 = x0;
+	assign o_x1 = x1;
+	assign o_x2 = x2;
+	assign o_x3 = x3;
 endmodule

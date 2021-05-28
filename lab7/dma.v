@@ -22,6 +22,8 @@ module DMA_controller (clk, startdma, length, address, o_address, BG,
         state = 0;
         bus_request = 0;
         index = 0;
+        interrupt = 0;
+        use_bus = 0;
     end
 
 

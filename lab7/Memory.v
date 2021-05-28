@@ -42,6 +42,10 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	output [15:0] dma_test_11;
 
 
+	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
+	reg [`WORD_SIZE-1:0] output_data2;
+
+
 	assign dma_test_0 = memory[16'h17];
 	assign dma_test_1 = memory[16'h18];
 	assign dma_test_2 = memory[16'h19];
@@ -54,10 +58,6 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	assign dma_test_9 = memory[16'h20];
 	assign dma_test_10 = memory[16'h21];
 	assign dma_test_11 = memory[16'h22];
-
-
-	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
-	reg [`WORD_SIZE-1:0] output_data2;
 	
 	assign data2 = read_m2?output_data2:`WORD_SIZE'bz;
 	
