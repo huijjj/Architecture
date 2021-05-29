@@ -14,9 +14,9 @@ module DMA_controller (clk, startdma, length, address, o_address, BG,
     output [3:0] idx;
     output reg interrupt;
 
-    reg [5:0] state;
+    reg [7:0] state;
     reg bus_request;
-    reg [5:0] index;
+    reg [6:0] index;
 
     initial begin
         state = 0;
@@ -30,8 +30,8 @@ module DMA_controller (clk, startdma, length, address, o_address, BG,
     always @(posedge clk) begin
         case(state)
             0: begin
-                if(startdma) begin
-                    bus_request <= 1;
+                if(startdma) begin // receive signal from CPU
+                    bus_request <= 1; // request the ownership of the bus
                     state <= 1;
                 end
                 else begin
@@ -40,7 +40,7 @@ module DMA_controller (clk, startdma, length, address, o_address, BG,
             end
             
             1: begin
-                if(BG) begin
+                if(BG) begin // bus ownership is granted
                     state <= 2;
                 end
                 else begin
@@ -48,129 +48,56 @@ module DMA_controller (clk, startdma, length, address, o_address, BG,
                 end
             end
 
+            // waiting for memory latency
             2: begin
                 state <= 3;
             end
-
             3: begin
                 state <= 4;
             end
-
             4: begin
                 state <= 5;
             end
-
             5: begin
                 state <= 6;
             end
-
             6: begin
                 state <= 7;
             end
-
             7: begin
                 use_bus <= 1;
                 state <= 8;
-            end
-
-            // write index 0
+            end // write Mem[index]
 
             8: begin
-                index <= index + 1;
-                state <= 9;
-            end
+                use_bus <= 0;
+                if(index == 11) begin
+                    state <= 9;
+                end
+                else begin
+                    index <= index + 1;
+                    state <= 2;
+                end
+            end    
 
-            // write index 1
-
-            9: begin
-                index <= index + 1;
+            9: begin // return the ownership of the bus
+                bus_request <= 0;
                 state <= 10;
             end
 
-            // write index 2
-
             10: begin
-                index <= index + 1;
-                state <= 11;
+                if(BG) begin // ownership not removed yet
+                    state <= 10;
+                end
+                else begin // ownership removed
+                    interrupt <= 1; // send DMA interrupt to CPU so that CPU can notice that the DMA operation is done
+                    state <= 11;
+                end
             end
-
-            // write index 3
 
             11: begin
-                index <= index + 1;
-                state <= 12;
-            end
-
-            // write index 4
-
-            12: begin
-                index <= index + 1;
-                state <= 13;
-            end
-
-            // write index 5
-
-            13: begin
-                index <= index + 1;
-                state <= 14;
-            end
-
-            // write index 6
-
-            14: begin
-                index <= index + 1;
-                state <= 15;
-            end
-
-            // write index 7
-
-            15: begin
-                index <= index + 1;
-                state <= 16;
-            end
-
-            // write index 8
-
-            16: begin
-                index <= index + 1;
-                state <= 17;
-            end
-
-            // write index 9
-
-            17: begin
-                index <= index + 1;
-                state <= 18;
-            end
-
-            // write index 10
-
-            18: begin
-                index <= index + 1;
-                state <= 19;
-            end
-
-            // write index 11
-
-            19: begin
-                bus_request <= 0;
-                use_bus <= 0;
-                state <= 20;
-            end
-
-            20: begin
-                if(BG) begin
-                    state <= 20;
-                end
-                else begin
-                    interrupt <= 1;
-                    state <= 21;
-                end
-            end
-
-            21: begin
-                interrupt <= 0;
-                index <= 0;
+                interrupt <= 0; // remove the interrupt
+                index <= 0; // initialize DMA module for next DMA operation
                 state <= 0;
             end
 

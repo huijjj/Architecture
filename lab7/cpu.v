@@ -220,6 +220,7 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length);
 		
 		if(dma_interrupt == 1) begin
 			reg_dma_start <= 0;
+			reg_dma_length <= 0;
 		end
 		else begin
 		end
@@ -887,10 +888,9 @@ dma_interrupt, external_interrupt, dma_BR, dma_BG, dma_start, dma_length);
 		.output_address(d_address2),
 		.data_mem(data2),
 		.read_m2(read_m2),
-		.write_m2(write2)
+		.write_m2(write_m2)
 	);
 
-	assign write_m2 = dma_BR ? 1 : write2;
 
 
 endmodule
