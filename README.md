@@ -27,14 +27,14 @@ POSTECH CSED311 Computer Architecture lab verilog files
     
 + **Lab2**
 
-    Implementing simple FSM(Finite State Machine) in verilog (Difficulty:  ★☆☆☆☆, 2h)
+    Implementing simple FSM in verilog (Difficulty:  ★☆☆☆☆, 2h)
     
     If you know what FSM is and how to design it, this lab won't be hard too.
     
     
 + **Lab3**
 
-    Implementing Single-Cycle CPU(CPU which processes every instruction within a single cycle) (Difficulty:  ★★★☆☆, 12h)
+    Implementing Single-Cycle CPU (Difficulty:  ★★★☆☆, 12h)
     
     You'll have to implement fully funtional CPU which can process almost every instruction in TSC instruction set architectire. 
     Reading TSC manual carefully and drawing the blueprint of your CPU before you start to code will save you a lot of time. 
@@ -43,7 +43,7 @@ POSTECH CSED311 Computer Architecture lab verilog files
 
 + **Lab4**
 
-    Implementing Multi-Cycle CPU(CPU which has variable latency for instruction) in verilog (Difficulty:  ★★★★☆, 24h)
+    Implementing Multi-Cycle CPU in verilog (Difficulty:  ★★★★☆, 24h)
     
     It is easier to build a new CPU rather than modifying codes from the previous lab(Lab3: Single-Cycle CPU).
     Break your instruction processing into stages and check which instruction needs which before you start coding this will save you decent amount of time.
@@ -51,7 +51,7 @@ POSTECH CSED311 Computer Architecture lab verilog files
     
 + **Lab5**
 
-    Implementing Pipelined CPU(CPU with increased throughput by fully utilizing the processing resources) in verilog (Difficulty:  ★★★★★, 36h)
+    Implementing Pipelined CPU in verilog (Difficulty:  ★★★★★, 36h)
     
     Highlight of this course. Branching predicting and Halting/Flushing logic might take your time. But remember that this is not something special.
     Halting is just not updating your registers(pipeline registers not register file) and keeping the old value, 
@@ -72,7 +72,10 @@ POSTECH CSED311 Computer Architecture lab verilog files
     
 + **Lab7**
 
-    Implementing DMA(Direct Memory Access) in verilog (Difficulty:  ★★☆☆☆, 10h)
+    Implementing DMA in verilog (Difficulty:  ★★☆☆☆, 10h)
     
     Just choose the proper cycle to initiate the DMA action. This will ease your debugging.
+    
+    
+# Special thanks to my competent teammate KyeongMin Lee  
     
