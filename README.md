@@ -76,6 +76,6 @@ POSTECH CSED311 Computer Architecture lab verilog files
     
     Just choose the proper cycle to initiate the DMA action. This will ease your debugging.
     
-    
-# Special thanks to my competent teammate KyeongMin Lee  
+***    
+ *_Special thanks to my competent teammate KyeongMin Lee_*  
     
