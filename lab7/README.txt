@@ -31,5 +31,3 @@ Additionally, you can add waveforms of wires below to check the signals between 
     + signal & data transfer between DMA controller and external device
         - use_bus // signal that tells external device to use data bus
         - idx // data about index of data to write at memory
-    
-Please refer to the report for further information. 
