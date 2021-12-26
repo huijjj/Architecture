@@ -1,6 +1,8 @@
 # Architecture
 POSTECH CSED311 Computer Architecture lab verilog files
 
+refer to TSC_manual.pdf for instruction formats and implementation details
+
 **USE WITH CAUTION, COPYING CODES FROM THIS REPOSITORY MIGHT CAUSE F IN YOUR GRADE** 
 
 # Contents
