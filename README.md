@@ -79,5 +79,5 @@ refer to TSC_manual.pdf for instruction formats and implementation details
     Just choose the proper cycle to initiate the DMA action. This will ease your debugging.
     
 ***    
- *_Special thanks to my competent teammate KyeongMin Lee_*  
+ *_Special thanks to my competent teammate <a href="https://github.com/2e16-mean">KyeongMin Lee</a>_*  
     
